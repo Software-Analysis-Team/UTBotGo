@@ -36,7 +36,7 @@ func PrintOneTest (index int, function Function, test Test) string {
 }
 
 func PrintTestsForFunction (function Function, tests []Test) (res string) {
-    res = "func Test_" + function.Name() + " (t .testing.T) {\n"
+    res = "func Test_" + function.Name() + " (t *testing.T) {\n"
     for i, test := range tests {
         res += PrintOneTest(i, function, test)
     }
