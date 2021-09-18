@@ -1,4 +1,4 @@
-package test1
+package simple_test
 
 func f (x, y int, z string) int {
     if len(z) > 10 { panic(z) }
