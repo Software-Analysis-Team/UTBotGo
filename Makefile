@@ -1,8 +1,19 @@
-run:
-	go run *.go
+username = Software-Analysis-Team
+program = UTBotGo
 
-test:
-	for test_file in test-files/*_test.go; do echo "$${test_file%_*}.go:"; go test $${test_file%_*}*; done
+go.mod:
+	go mod init github.com/${username}/${program}
+
+${program}: go.mod
+	go build .
+
+build: ${program}
+
+run: ${program}
+	./$^
 
 clean:
-	rm test-files/*_test.go
+	rm -f ${program}
+
+deep-clean: clean
+	rm -f go.mod
