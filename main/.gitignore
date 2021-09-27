@@ -4,8 +4,6 @@
 *.dll
 *.so
 *.dylib
-
-# Main executable file
 UTBotGo
 
 # Test binary, built with `go test -c`
@@ -17,5 +15,5 @@ UTBotGo
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-# IDEA directory
+# IDEA dir
 .idea
