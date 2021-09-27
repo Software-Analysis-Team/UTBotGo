@@ -1,13 +1,21 @@
 package main
 
-import "go/ast"
+import (
+    "go/ast"
+    "io/fs"
+)
 
-type File struct {
+type FSObject struct {
+    Name string
+    Mode fs.FileMode
+}
+
+type GoFile struct {
     AST *ast.File
     Name string
 }
 
-type Function struct {
+type GoFunction struct {
     AST *ast.FuncDecl
 }
 

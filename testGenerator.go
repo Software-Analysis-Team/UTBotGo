@@ -1,14 +1,17 @@
 package main
 
-func GenerateOneTest (types []Type) (test Test) {
-    test = make(Test, len(types))
+func GenerateOneTest(types []Type) (test Test) {
+    test = make(
+        Test,
+        len(types),
+    )
     for i, type_ := range types {
         test[i] = GenerateData(type_)
     }
     return
 }
 
-func GenerateTests (types []Type, amount int) (tests []Test) {
+func GenerateTests(types []Type, amount int) (tests []Test) {
     if amount <= 0 {
         panic("amount must be positive")
     }
@@ -19,12 +22,12 @@ func GenerateTests (types []Type, amount int) (tests []Test) {
     return
 }
 
-func (function Function) GenerateTests () []Test {
+func (function GoFunction) GenerateTests() []Test {
     paramTypes := function.ParamTypes()
     return GenerateTests(paramTypes, 5)
 }
 
-func (file File) GenerateTests () (testSet TestSet) {
+func (file GoFile) GenerateTests() (testSet TestSet) {
     testSet = make(TestSet)
     functions := file.Functions()
     for _, function := range functions {
