@@ -4,7 +4,7 @@ program = UTBotGo
 go.mod:
 	go mod init github.com/${username}/${program}
 
-${program}: go.mod
+${program}: go.mod *.go
 	go build .
 
 build: ${program}
