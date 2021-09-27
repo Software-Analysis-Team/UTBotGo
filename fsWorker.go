@@ -29,11 +29,11 @@ func (fso FSObject) ContainedFiles() []FSObject {
 	if err != nil {
 		return nil
 	}
-	var res []FSObject
-	for _, subFileInfo := range subFilesInfo {
+	res := make([]FSObject, len(subFilesInfo))
+	for i, subFileInfo := range subFilesInfo {
 		subName := subFileInfo.Name()
 		subMode := subFileInfo.Mode()
-		res = append(res, FSObject{name + subName, subMode})
+		res[i] = FSObject{name + subName, subMode}
 	}
 	return res
 }
