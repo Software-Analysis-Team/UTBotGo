@@ -1,12 +1,12 @@
 package main
 
 import (
-	"strconv"
+	"fmt"
 	"strings"
 )
 
-func PrintPackageDeclaration(file File) string {
-	return "package " + file.PackageName() + "\n\n"
+func PrintPackageDeclaration(file GoFile) string {
+	return fmt.Sprintf("package %s\n\n", file.PackageName())
 }
 
 func PrintImportedLibraries() string {
@@ -21,22 +21,29 @@ func PrintDataFromTest(test Test) string {
 	return strings.Join(dataStr, ", ")
 }
 
-func PrintCallingOfTestedFunction(function Function, test Test) string {
-	return function.Name() + "(" + PrintDataFromTest(test) + ")"
+func PrintCallingOfTestedFunction(function GoFunction, test Test) string {
+	return fmt.Sprintf("%s(%s)", function.Name(), PrintDataFromTest(test))
 }
 
-func PrintOneTest(index int, function Function, test Test) string {
-	return "    t.Run(" +
-		"\"" + strconv.Itoa(index+1) + "\", " +
-		"func (t *testing.T) { " +
-		"defer func () { if recover() != nil { t.Fail() } }(); " +
-		PrintCallingOfTestedFunction(function, test) +
-		" }" +
-		")\n"
+func PrintOneTest(index int, function GoFunction, test Test) string {
+	temp := `	t.Run("%d", func() {
+		defer func() {
+			if recover() != nil {
+				t.Fail()
+			}
+		}()
+		%s
+	})
+`
+	return fmt.Sprintf(
+		temp,
+		index + 1,
+		PrintCallingOfTestedFunction(function, test),
+	)
 }
 
-func PrintTestsForFunction(function Function, tests []Test) (res string) {
-	res = "func Test_" + function.Name() + " (t *testing.T) {\n"
+func PrintTestsForFunction(function GoFunction, tests []Test) (res string) {
+	res = fmt.Sprintf("func Test_%s(t *testing.T) {\n", function.Name())
 	for i, test := range tests {
 		res += PrintOneTest(i, function, test)
 	}
@@ -44,7 +51,7 @@ func PrintTestsForFunction(function Function, tests []Test) (res string) {
 	return
 }
 
-func PrintTestsForFile(file File, testSet TestSet) (res string) {
+func PrintTestsForFile(file GoFile, testSet TestSet) (res string) {
 	res = ""
 	functions := file.Functions()
 	for _, function := range functions {
@@ -55,8 +62,8 @@ func PrintTestsForFile(file File, testSet TestSet) (res string) {
 	return
 }
 
-func PrintTestingFile(file File, testSet TestSet) string {
+func PrintTestingFile(file GoFile, testSet TestSet) string {
 	return PrintPackageDeclaration(file) +
-		PrintImportedLibraries() +
-		PrintTestsForFile(file, testSet)
+			PrintImportedLibraries() +
+			PrintTestsForFile(file, testSet)
 }
