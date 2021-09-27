@@ -14,7 +14,8 @@ func CreateTestingCode(testedFileName string) string {
 
 func CreateTestingFile(testedFileName string) {
 	isGo, _ := regexp.MatchString(`.*\.go$`, testedFileName)
-	if !isGo {
+	isGoTest, _ := regexp.MatchString(`.*_test\.go$`, testedFileName)
+	if !isGo || isGoTest {
 		return
 	}
 	testingFileName := testedFileName[:len(testedFileName)-3] + "_test.go"
@@ -27,27 +28,29 @@ func CreateTestingFile(testedFileName string) {
 	_ = testingFile.Close()
 }
 
-func CreateTestingDir(testedDirName string) {
-	files, _ := ioutil.ReadDir(testedDirName)
-	for _, file := range files {
-		fileName := file.Name()
-		isGoTest, _ := regexp.MatchString(`.*_test\.go$`, fileName)
-		if !isGoTest && !file.IsDir() {
-			CreateTestingFile(testedDirName + fileName)
-		}
+func CreateTestingDir(testedDirName string, recursively bool) {
+	objs, _ := ioutil.ReadDir(testedDirName)
+	var CreateTestingSomething func(string)
+	if recursively {
+		CreateTestingSomething = func(name string) { CreateTestingObject(name, recursively) }
+	} else {
+		CreateTestingSomething = CreateTestingFile
+	}
+	for _, obj := range objs {
+		CreateTestingSomething(testedDirName + obj.Name())
 	}
 }
 
-func CreateTestingObject(testedObject string) {
-	info, _ := os.Stat(testedObject)
+func CreateTestingObject(testedObjectName string, recursively bool) {
+	info, _ := os.Stat(testedObjectName)
 	switch mode := info.Mode(); {
 	case mode.IsDir():
-		CreateTestingDir(testedObject)
+		CreateTestingDir(testedObjectName, recursively)
 	case mode.IsRegular():
-		CreateTestingFile(testedObject)
+		CreateTestingFile(testedObjectName)
 	}
 }
 
 func main() {
-	CreateTestingObject(os.Args[1])
+	CreateTestingObject(os.Args[1], false)
 }
