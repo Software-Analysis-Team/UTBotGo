@@ -23,7 +23,7 @@ func CreateTestingGoFile(testedFile FSObject) {
 func CreateTestingFile(testedFile FSObject) {
 	isGo, _ := regexp.MatchString(`.*\.go$`, testedFile.Name)
 	isGoTest, _ := regexp.MatchString(`.*_test\.go$`, testedFile.Name)
-	if isGo && ! isGoTest {
+	if isGo && !isGoTest {
 		CreateTestingGoFile(testedFile)
 	}
 }

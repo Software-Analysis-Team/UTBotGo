@@ -37,7 +37,7 @@ func PrintOneTest(index int, function GoFunction, test Test) string {
 `
 	return fmt.Sprintf(
 		temp,
-		index + 1,
+		index+1,
 		PrintCallingOfTestedFunction(function, test),
 	)
 }
@@ -64,6 +64,6 @@ func PrintTestsForFile(file GoFile, testSet TestSet) (res string) {
 
 func PrintTestingFile(file GoFile, testSet TestSet) string {
 	return PrintPackageDeclaration(file) +
-			PrintImportedLibraries() +
-			PrintTestsForFile(file, testSet)
+		PrintImportedLibraries() +
+		PrintTestsForFile(file, testSet)
 }

@@ -22,9 +22,13 @@ func (fso FSObject) IsFile() bool {
 
 func (fso FSObject) ContainedFiles() []FSObject {
 	name := fso.Name
-	if name == "" || name[len(name) - 1] != '/' { name += "/" }
+	if name == "" || name[len(name)-1] != '/' {
+		name += "/"
+	}
 	subFilesInfo, err := ioutil.ReadDir(fso.Name)
-	if err != nil { return nil }
+	if err != nil {
+		return nil
+	}
 	var res []FSObject
 	for _, subFileInfo := range subFilesInfo {
 		subName := subFileInfo.Name()

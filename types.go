@@ -1,22 +1,22 @@
 package main
 
 import (
-    "go/ast"
-    "io/fs"
+	"go/ast"
+	"io/fs"
 )
 
 type FSObject struct {
-    Name string
-    Mode fs.FileMode
+	Name string
+	Mode fs.FileMode
 }
 
 type GoFile struct {
-    AST *ast.File
-    Name string
+	AST  *ast.File
+	Name string
 }
 
 type GoFunction struct {
-    AST *ast.FuncDecl
+	AST *ast.FuncDecl
 }
 
 type Type string
