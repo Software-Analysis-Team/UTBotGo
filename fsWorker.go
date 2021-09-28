@@ -7,9 +7,8 @@ import (
 
 func NewFSObject(fileName string) FSObject {
 	fileInfo, _ := os.Stat(fileName)
-	name := fileInfo.Name()
 	mode := fileInfo.Mode()
-	return FSObject{name, mode}
+	return FSObject{fileName, mode}
 }
 
 func (fso FSObject) IsDir() bool {

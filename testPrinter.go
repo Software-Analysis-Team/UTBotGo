@@ -26,7 +26,7 @@ func PrintCallingOfTestedFunction(function GoFunction, test Test) string {
 }
 
 func PrintOneTest(index int, function GoFunction, test Test) string {
-	temp := `	t.Run("%d", func() {
+	temp := `	t.Run("%d", func(t *testing.T) {
 		defer func() {
 			if recover() != nil {
 				t.Fail()
