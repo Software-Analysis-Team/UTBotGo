@@ -10,7 +10,7 @@ func CreateTestingGoFile(testedFile FSObject) {
 	testingFileName := testedFileName[:len(testedFileName)-3] + "_test.go"
 	testingFile, _ := os.OpenFile(
 		testingFileName,
-		os.O_WRONLY|os.O_CREATE,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
 		0644,
 	)
 	testedGoFile, _ := NewGoFile(testedFileName)
