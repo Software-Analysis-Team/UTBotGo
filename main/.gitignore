@@ -15,5 +15,8 @@ UTBotGo
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-# IDEA dir
+# From template's .gitignore
+.gradle
 .idea
+.qodana
+build
