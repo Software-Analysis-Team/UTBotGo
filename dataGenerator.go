@@ -14,7 +14,7 @@ func GenerateString(length int) (res string) {
 	n := rand.Intn(length)
 	res = ""
 	for i := 0; i < n; i++ {
-		res += strconv.Itoa(rand.Intn(128))
+		res += string(rune(rand.Intn(128)))
 	}
 	return
 }
