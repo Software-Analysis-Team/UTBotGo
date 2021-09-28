@@ -8,7 +8,7 @@ ${program}: go.mod *.go
 	go build .
 
 build: ${program}
-	@:
+	sudo ln -fi ${program} /usr/bin/${program}
 
 run: ${program}
 	./$^ $(filter-out $@, $(MAKECMDGOALS))
