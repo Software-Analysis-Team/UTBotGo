@@ -1,9 +1,12 @@
 # UTBotGo
 
-This project consists of three parts (directories):
+![Build](https://github.com/SergeyKuz1001/UTBotGo/workflows/Build/badge.svg)
 
-*    `main` - main program
-*    `plugin` - plugin for Goland
-*    `examples` - examples of Go files for testing
+<!-- Plugin description -->
+Plugin for generating unit tests for Go files.
+<!-- Plugin description end -->
 
-For more informations read `README.md` in directory you interested in.
+---
+Plugin based on the [IntelliJ Platform Plugin Template][template].
+
+[template]: https://github.com/JetBrains/intellij-platform-plugin-template
