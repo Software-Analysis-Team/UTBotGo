@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+
+# Main executable file
 UTBotGo
 
 # Test binary, built with `go test -c`
@@ -15,8 +17,5 @@ UTBotGo
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-# From template's .gitignore
-.gradle
+# IDEA directory
 .idea
-.qodana
-build
