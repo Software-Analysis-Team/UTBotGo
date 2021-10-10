@@ -1,6 +1,6 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# UTBotGo Changelog
+# UTBotGo Plugin Changelog
 
 ## [Unreleased]
 ### Added

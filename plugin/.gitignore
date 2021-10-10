@@ -1,0 +1,7 @@
+# IDEA directory
+.idea
+
+# Other generated directories
+.gradle
+.qodana
+build
