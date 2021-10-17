@@ -19,6 +19,11 @@ type GoFunction struct {
 	AST *ast.FuncDecl
 }
 
+type Param struct {
+	Name string
+	Type Type
+}
+
 type Type string
 
 type Data string
@@ -26,3 +31,20 @@ type Data string
 type Test []Data
 
 type TestSet map[string][]Test
+
+type FuzzingMode int
+
+const (
+	Gofuzz FuzzingMode = iota
+	Go_fuzz
+	TestingFuzz
+)
+
+type GeneratingResult struct {
+	GeneratingFilesAmount int
+}
+
+type ParsedArgs struct {
+	Object FSObject
+	Mode   FuzzingMode
+}
