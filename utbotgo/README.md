@@ -1,6 +1,6 @@
-# UTBotGO Main
+# UTBotGO
 
-Main program for generating unit tests for Go files.
+Program for generating unit tests for Go files.
 
 ## How to install
 
@@ -8,8 +8,8 @@ Main program for generating unit tests for Go files.
     make install
     ```
     
-    It installs command `UTBoGo` on your system, so you will be able to run the
-    command `UTBoGo` from any directory.
+    It installs command `utbotgo` on your system, so you will be able to run the
+    command `utbotgo` from any directory.
 
     Note: You may need to run this command together with `sudo`.
 
@@ -17,8 +17,8 @@ Main program for generating unit tests for Go files.
     make build
     ```
     
-    It creates executable file `UTBotGo` in this directory. You will be able to
-    run command `UTBoGo` only from this directory.
+    It creates executable file `utbotgo` in this directory. You will be able to
+    run command `utbotgo` only from this directory.
 
 ## How to run
 
@@ -28,15 +28,15 @@ make run <file_or_dir>
 or
 ```bash
 make build
-./UTBotGo <file_or_dir>
+./utbotgo <file_or_dir>
 ```
 or
 ```bash
 make install
-UTBotGo <file_or_dir>
+utbotgo <file_or_dir>
 ```
 
-Note: Last variant allow you to run `UTBotGo` command from any directory.
+Note: Last variant allow you to run `utbotgo` command from any directory.
 
 ## How to use
 
@@ -57,6 +57,6 @@ testing file `hello_test.go` will be generated, and output will be `1`.
 make uninstall
 ```
 
-It removes command `UTBotGo` from your system.
+It removes command `utbotgo` from your system.
 
 Note: You may need to run this command together with `sudo`.
