@@ -6,6 +6,11 @@ import (
 	"go/token"
 )
 
+type GoFile struct {
+	AST  *ast.File
+	Name string
+}
+
 func ParseGoFile(fileName string) (GoFile, error) {
 	fileSet := token.NewFileSet()
 	file, err := parser.ParseFile(fileSet, fileName, nil, 0)
@@ -17,6 +22,10 @@ func ParseGoFile(fileName string) (GoFile, error) {
 
 func (file GoFile) PackageName() string {
 	return file.AST.Name.Name
+}
+
+type GoFunction struct {
+	AST *ast.FuncDecl
 }
 
 func (file GoFile) Functions() (res []GoFunction) {
@@ -32,12 +41,17 @@ func (function GoFunction) Name() string {
 	return function.AST.Name.Name
 }
 
+type Param struct {
+	Name string
+	Type string
+}
+
 func (function GoFunction) Params() (res []Param) {
 	params := function.AST.Type.Params.List
 	for _, param := range params {
 		paramType := param.Type.(*ast.Ident).Name
 		for _, paramName := range param.Names {
-			res = append(res, Param{paramName.Name, Type(paramType)})
+			res = append(res, Param{paramName.Name, paramType})
 		}
 	}
 	return
