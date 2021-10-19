@@ -6,23 +6,6 @@ import (
 	"strconv"
 )
 
-type FuzzingMode int
-
-const (
-	Gofuzz FuzzingMode = iota
-	Go_fuzz
-	TestingFuzz
-)
-
-type GeneratingResult struct {
-	GeneratingFilesAmount int
-}
-
-type ParsedArgs struct {
-	Object FSObject
-	Mode   FuzzingMode
-}
-
 func (result GeneratingResult) String() (resultStr string) {
 	resultStr = strconv.Itoa(result.GeneratingFilesAmount)
 	return
