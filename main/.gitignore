@@ -6,7 +6,7 @@
 *.dylib
 
 # Main executable file
-utbotgo
+UTBotGo
 
 # Test binary, built with `go test -c`
 *.test
@@ -19,6 +19,3 @@ utbotgo
 
 # IDEA directory
 .idea
-
-# Make directory
-.make
