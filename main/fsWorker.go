@@ -1,15 +1,9 @@
 package main
 
 import (
-	"io/fs"
 	"io/ioutil"
 	"os"
 )
-
-type FSObject struct {
-	Name string
-	Mode fs.FileMode
-}
 
 func NewFSObject(fileName string) FSObject {
 	fileInfo, _ := os.Stat(fileName)
