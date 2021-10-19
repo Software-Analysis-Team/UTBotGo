@@ -2,7 +2,7 @@
 
 This project consists of three parts (directories):
 
-*    `utbotgo` - main program
+*    `main` - main program
 *    `plugin` - plugin for Goland
 *    `examples` - examples of Go files for testing
 
