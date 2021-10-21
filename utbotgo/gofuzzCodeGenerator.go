@@ -6,90 +6,95 @@ import (
 )
 
 func GofuzzTestingCode(file GoFile) string {
-	return GofuzzPackageDeclaration(file) +
-		GofuzzImportedLibraries() +
-		GofuzzFuzzingForFile(file)
+	tb := &TextBuilder{}
+	GofuzzPackageDeclaration(tb, file)
+	GofuzzImportedLibraries(tb)
+	GofuzzFuzzingForFile(tb, file)
+	return tb.String()
 }
 
-func GofuzzPackageDeclaration(file GoFile) string {
-	return fmt.Sprintf("package %s\n", file.PackageName())
+func GofuzzPackageDeclaration(tb *TextBuilder, file GoFile) {
+	tb.Section(func() {
+		tb.WriteLine("package " + file.PackageName())
+	})
 }
 
-func GofuzzImportedLibraries() string {
-	temp := `
-import (
-	"fmt"
-	fuzz "github.com/google/gofuzz"
-	"strconv"
-	"testing"
-)
-
-`
-	return temp
+func GofuzzImportedLibraries(tb *TextBuilder) {
+	tb.Section(func() {
+		tb.Subsection("import (", ")", func() {
+			tb.WriteLine("\"fmt\"")
+			tb.WriteLine("fuzz \"github.com/google/gofuzz\"")
+			tb.WriteLine("\"strconv\"")
+			tb.WriteLine("\"testing\"")
+		})
+	})
 }
 
-func GofuzzFuzzingForFile(file GoFile) (code string) {
+func GofuzzFuzzingForFile(tb *TextBuilder, file GoFile) {
 	for _, function := range file.Functions() {
-		code += GofuzzFuzzingForFunction(function)
+		GofuzzFuzzingForFunction(tb, function)
 	}
-	return
 }
 
-func GofuzzFuzzingForFunction(function GoFunction) string {
-	funcDecl := GofuzzFunctionDecl(function)
-	paramsDefinition, paramNames, fuzzerName := GofuzzInit(function)
-	forLoop := GofuzzMainLoop(function, 10, paramNames, fuzzerName)
-	return funcDecl + " {\n" + paramsDefinition + forLoop + "}\n\n"
+func GofuzzFuzzingForFunction(tb *TextBuilder, function GoFunction) {
+	tb.Section(func() {
+		funcDescription := fmt.Sprintf("func Test_%s(t *testing.T) {", function.Name())
+		tb.Subsection(funcDescription, "}", func() {
+			paramNames, fuzzerName := GofuzzInit(tb, function)
+			GofuzzMainLoop(tb, function, 10, paramNames, fuzzerName)
+		})
+	})
 }
 
-func GofuzzFunctionDecl(function GoFunction) string {
-	return fmt.Sprintf("func Test_%s (t *testing.T)", function.Name())
-}
-
-func GofuzzInit(function GoFunction) (string, []string, string) {
-	var resultBuilder strings.Builder
+func GofuzzInit(tb *TextBuilder, function GoFunction) ([]string, string) {
+	var paramName string
 	var paramNames []string
 	fuzzerName := "fuzzer"
-	resultBuilder.WriteString("\tvar (\n")
-	for _, param := range function.Params() {
-		resultBuilder.WriteString(fmt.Sprintf("\t\t%s_ %s\n", param.Name, param.Type))
-		paramNames = append(paramNames, fmt.Sprintf("%s_", param.Name))
-	}
-	resultBuilder.WriteString("\t)\n")
-	resultBuilder.WriteString(fmt.Sprintf("\t%s := fuzz.New()\n", fuzzerName))
-	return resultBuilder.String(), paramNames, fuzzerName
+	tb.Section(func() {
+		tb.Subsection("var (", ")", func() {
+			for _, param := range function.Params() {
+				paramName = param.Name + "_"
+				tb.WriteLine(paramName + " " + param.Type)
+				paramNames = append(paramNames, paramName)
+			}
+		})
+		tb.WriteLine(fuzzerName + " := fuzz.New()")
+	})
+	return paramNames, fuzzerName
 }
 
-func GofuzzMainLoop(function GoFunction, repetitionsNumber int, paramNames []string, fuzzerName string) string {
+func GofuzzMainLoop(tb *TextBuilder, function GoFunction, repetitionsNumber int, paramNames []string, fuzzerName string) {
 	counterName := "i"
-	temp := `	for %s := 0; %s < %d; %s++ {
-%s
-	}
-`
-	return fmt.Sprintf(
-		temp,
-		counterName,
-		counterName,
-		repetitionsNumber,
-		counterName,
-		GofuzzMainLoopBlock(function, paramNames, fuzzerName, counterName),
-	)
+	tb.Section(func() {
+		forDefinition := fmt.Sprintf(
+			"for %s := 0; %s < %d; %s++ {",
+			counterName,
+			counterName,
+			repetitionsNumber,
+			counterName,
+		)
+		tb.Subsection(forDefinition, "}", func() {
+			GofuzzMainLoopBlock(tb, function, paramNames, fuzzerName, counterName)
+		})
+	})
 }
 
-func GofuzzMainLoopBlock(function GoFunction, paramNames []string, fuzzerName string, counterName string) string {
-	temp := `		t.Run(strconv.Itoa(%s), func(t *testing.T) {
-			defer func() {
-				if recover() != nil {
-					t.Error(%s)
-				}
-			}()
-%s
-			%s
-		})`
-	errorMessage := GofuzzErrorMessage(function, paramNames)
-	fuzzingSection := GofuzzFuzzingSection(paramNames, fuzzerName)
-	callingFunction := GofuzzCallingFunction(function, paramNames)
-	return fmt.Sprintf(temp, counterName, errorMessage, fuzzingSection, callingFunction)
+func GofuzzMainLoopBlock(tb *TextBuilder, function GoFunction, paramNames []string, fuzzerName string, counterName string) {
+	tb.Section(func() {
+		subtestRunning := fmt.Sprintf("t.Run(strconv.Itoa(%s), func(t *testing.T) {", counterName)
+		tb.Subsection(subtestRunning, "})", func() {
+			tb.Section(func() {
+				tb.Subsection("defer func() {", "}()", func() {
+					tb.Subsection("if recover() != nil {", "}", func() {
+						errorMessage := GofuzzErrorMessage(function, paramNames)
+						tb.WriteLine(fmt.Sprintf("t.Error(%s)", errorMessage))
+					})
+				})
+			})
+			GofuzzFuzzingSection(tb, paramNames, fuzzerName)
+			GofuzzCallingFunction(tb, function, paramNames)
+		})
+	})
 }
 
 func GofuzzErrorMessage(function GoFunction, paramNames []string) string {
@@ -106,14 +111,16 @@ func GofuzzErrorMessage(function GoFunction, paramNames []string) string {
 	return resultBuilder.String()
 }
 
-func GofuzzFuzzingSection(paramNames []string, fuzzerName string) string {
-	var resultBuilder strings.Builder
-	for _, paramName := range paramNames {
-		resultBuilder.WriteString(fmt.Sprintf("\t\t\t%s.Fuzz(&%s)\n", fuzzerName, paramName))
-	}
-	return resultBuilder.String()
+func GofuzzFuzzingSection(tb *TextBuilder, paramNames []string, fuzzerName string) {
+	tb.Section(func() {
+		for _, paramName := range paramNames {
+			tb.WriteLine(fmt.Sprintf("%s.Fuzz(&%s)", fuzzerName, paramName))
+		}
+	})
 }
 
-func GofuzzCallingFunction(function GoFunction, paramNames []string) string {
-	return function.Name() + "(" + strings.Join(paramNames, ", ") + ")"
+func GofuzzCallingFunction(tb *TextBuilder, function GoFunction, paramNames []string) {
+	tb.Section(func() {
+		tb.WriteLine(function.Name() + "(" + strings.Join(paramNames, ", ") + ")")
+	})
 }

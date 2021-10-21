@@ -30,9 +30,11 @@ func ParseArgs() (ParsedArgs, error) {
 	case "--go-fuzz":
 		fm = Go_fuzz
 		objStr = os.Args[2]
-	default:
+	case "--gofuzz":
 		fm = Gofuzz
-		objStr = os.Args[1]
+		objStr = os.Args[2]
+	default:
+		return ParsedArgs{}, fmt.Errorf("flag must be present")
 	}
 	obj = NewFSObject(objStr)
 	return ParsedArgs{obj, fm}, nil

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,9 +10,9 @@ import (
 
 func GenerateTestingCode(parsedArgs ParsedArgs) (code string, err error) {
 	fileName := parsedArgs.Object.Name
-	file, subErr := ParseGoFile(fileName)
-	if subErr != nil {
-		return "", subErr
+	file, err := ParseGoFile(fileName)
+	if err != nil {
+		return
 	}
 	switch parsedArgs.Mode {
 	case Gofuzz:
@@ -21,11 +22,10 @@ func GenerateTestingCode(parsedArgs ParsedArgs) (code string, err error) {
 	default:
 		code = TestingFuzzTestingCode(file)
 	}
-	err = nil
 	return
 }
 
-func GenerateTestingGoFile(parsedArgs ParsedArgs) bool {
+func GenerateTestingGoFile(parsedArgs ParsedArgs) (err error) {
 	testedFileName := parsedArgs.Object.Name
 	testingFileName :=
 		strings.TrimSuffix(testedFileName, filepath.Ext(testedFileName)) + "_test.go"
@@ -35,24 +35,21 @@ func GenerateTestingGoFile(parsedArgs ParsedArgs) bool {
 		0644, // read for all users, write only for owner
 	)
 	if err != nil {
-		return false
+		return
 	}
 	testingCode, err := GenerateTestingCode(parsedArgs)
 	if err != nil {
-		return false
+		return
 	}
 	_, err = testingFile.WriteString(testingCode)
 	if err != nil {
-		return false
+		return
 	}
 	err = testingFile.Close()
-	if err != nil {
-		return false
-	}
-	return true
+	return
 }
 
-func GenerateTestingFile(parsedArgs ParsedArgs) (result GeneratingResult) {
+func GenerateTestingFile(parsedArgs ParsedArgs) (result GeneratingResult, err error) {
 	isGo, err := regexp.MatchString(`.*\.go$`, parsedArgs.Object.Name)
 	if err != nil {
 		return
@@ -62,19 +59,25 @@ func GenerateTestingFile(parsedArgs ParsedArgs) (result GeneratingResult) {
 		return
 	}
 	if isGo && !isGoTest {
-		if GenerateTestingGoFile(parsedArgs) {
-			result.GeneratingFilesAmount = 1
+		err = GenerateTestingGoFile(parsedArgs)
+		if err != nil {
+			return
 		}
+		result.GeneratingFilesAmount = 1
 	}
 	return
 }
 
-func GenerateTestingDir(parsedArgs ParsedArgs, recursively bool) (result GeneratingResult) {
+func GenerateTestingDir(parsedArgs ParsedArgs, recursively bool) (result GeneratingResult, err error) {
+	var subResult GeneratingResult
 	if recursively {
 		for _, testedObject := range parsedArgs.Object.ContainedFiles() {
 			subArgs := parsedArgs
 			subArgs.Object = testedObject
-			subResult := GenerateTestingObject(subArgs, true)
+			subResult, err = GenerateTestingObject(subArgs, true)
+			if err != nil {
+				return
+			}
 			result.GeneratingFilesAmount += subResult.GeneratingFilesAmount
 		}
 	} else {
@@ -82,7 +85,10 @@ func GenerateTestingDir(parsedArgs ParsedArgs, recursively bool) (result Generat
 			if testedObject.IsFile() {
 				subArgs := parsedArgs
 				subArgs.Object = testedObject
-				subResult := GenerateTestingFile(subArgs)
+				subResult, err = GenerateTestingFile(subArgs)
+				if err != nil {
+					return
+				}
 				result.GeneratingFilesAmount += subResult.GeneratingFilesAmount
 			}
 		}
@@ -90,12 +96,14 @@ func GenerateTestingDir(parsedArgs ParsedArgs, recursively bool) (result Generat
 	return
 }
 
-func GenerateTestingObject(parsedArgs ParsedArgs, recursively bool) (result GeneratingResult) {
+func GenerateTestingObject(parsedArgs ParsedArgs, recursively bool) (result GeneratingResult, err error) {
 	switch {
 	case parsedArgs.Object.IsDir():
-		result = GenerateTestingDir(parsedArgs, recursively)
+		result, err = GenerateTestingDir(parsedArgs, recursively)
 	case parsedArgs.Object.IsFile():
-		result = GenerateTestingFile(parsedArgs)
+		result, err = GenerateTestingFile(parsedArgs)
+	default:
+		err = fmt.Errorf("unknown object: %s", parsedArgs.Object.Name)
 	}
 	return
 }
