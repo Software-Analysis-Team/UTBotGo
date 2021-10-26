@@ -29,23 +29,15 @@ func GenerateTestingGoFile(parsedArgs ParsedArgs) (err error) {
 	testedFileName := parsedArgs.Object.Name
 	testingFileName :=
 		strings.TrimSuffix(testedFileName, filepath.Ext(testedFileName)) + "_test.go"
-	testingFile, err := os.OpenFile(
-		testingFileName,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
-		0644, // read for all users, write only for owner
-	)
-	if err != nil {
-		return
-	}
 	testingCode, err := GenerateTestingCode(parsedArgs)
 	if err != nil {
 		return
 	}
-	_, err = testingFile.WriteString(testingCode)
-	if err != nil {
-		return
-	}
-	err = testingFile.Close()
+	err = os.WriteFile(
+		testingFileName,
+		[]byte(testingCode),
+		0644, // read for all users, write only for owner
+	)
 	return
 }
 
