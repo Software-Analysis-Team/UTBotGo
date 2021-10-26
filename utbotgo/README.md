@@ -5,10 +5,6 @@ Program for generating unit tests for Go files.
 ## How to install
 
 ```bash
-make
-```
-or
-```bash
 make install
 ```
 
