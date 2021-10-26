@@ -20,7 +20,7 @@ class UnitTestGenerating : AnAction() {
             return
         }
         val path = file.originalFile.virtualFile.path
-        val proc = Runtime.getRuntime().exec("UTBotGo $path")
+        val proc = Runtime.getRuntime().exec("utbotgo --gofuzz $path")
         val scan = Scanner(BufferedReader(InputStreamReader(proc.inputStream)))
         val genFilesAmt = scan.nextInt()
         scan.close()
