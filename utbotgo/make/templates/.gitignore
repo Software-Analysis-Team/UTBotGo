@@ -1,9 +1,9 @@
 # Executable files
-utbotgo
-templateApplier/templateApplier
+{PROGRAM_NAME}
+{SUB_PROGRAM_DIR}/{SUB_PROGRAM_NAME}
 
 # IDEA directory
 .idea
 
 # Directory of marks of make
-.make
+{MARK_DIR}
