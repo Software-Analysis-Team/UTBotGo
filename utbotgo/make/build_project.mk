@@ -6,7 +6,7 @@ targets := $(shell ls -A $(TEMPLATES_DIR))
 # result to file-target
 define rule_for_target
 $(1): $(TEMPLATES_DIR)/$(1) $(SUB_PROGRAM_DIR)/$(SUB_PROGRAM_NAME)
-	cat $$^ | $(SUB_PROGRAM_DIR)/$(SUB_PROGRAM_NAME) $(MAKE_DIR)/config.mk > $$@
+	cat $$< | $(SUB_PROGRAM_DIR)/$(SUB_PROGRAM_NAME) $(CONFIG_FILE) > $$@
 
 endef
 

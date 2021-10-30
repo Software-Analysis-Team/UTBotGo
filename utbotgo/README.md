@@ -27,10 +27,10 @@ utbotgo <option> <file_or_dir>
 
 ### Option
 
-* `gofuzz` - use package [gofuzz](https://github.com/google/gofuzz) for
+* `--gofuzz` - use package [gofuzz](https://github.com/google/gofuzz) for
 fuzzing
 
-* `go-fuzz` - use package [go-fuzz](https://github.com/dvyukov/go-fuzz) for
+* `--go-fuzz` - use package [go-fuzz](https://github.com/dvyukov/go-fuzz) for
 fuzzing
 
 ### File or dir

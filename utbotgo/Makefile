@@ -1,4 +1,4 @@
-MAKE_DIR = make
+include .env
 
 include $(MAKE_DIR)/*.mk
 
