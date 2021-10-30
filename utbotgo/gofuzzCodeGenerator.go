@@ -41,7 +41,7 @@ func GofuzzFuzzingForFunction(tb *TextBuilder, function GoFunction, repetitionsN
 		funcDescription := fmt.Sprintf("func Test_%s(t *testing.T) {", function.Name())
 		tb.Subsection(funcDescription, "}", func() {
 			dataName := GofuzzInit(tb, function, repetitionsNumber)
-			GofuzzMainLoop(tb, function, repetitionsNumber, dataName)
+			GofuzzMainLoop(tb, function, dataName)
 		})
 	})
 }
@@ -56,7 +56,7 @@ func GofuzzInit(tb *TextBuilder, function GoFunction, repetitionsNumber int) str
 }
 
 func GofuzzArgsType(tb *TextBuilder, function GoFunction) string {
-	argsTypeName := "args"
+	argsTypeName := "Args"
 	tb.Section(func() {
 		tb.Subsection(fmt.Sprintf("type %s struct {", argsTypeName), "}", func() {
 			for _, param := range function.Params() {
@@ -103,7 +103,7 @@ func GofuzzDataDefinition(tb *TextBuilder, function GoFunction, repetitionsNumbe
 					for i := range funcParams {
 						variables[i].New(funcParams[i].Type)
 						fuzzer.Fuzz(variables[i].Value)
-						tb.WriteLine(funcParams[i].Name + ": " + variables[i].String() + ",")
+						tb.WriteLine(fmt.Sprintf("%s: %s,", funcParams[i].Name, variables[i].String()))
 					}
 				})
 			}
@@ -112,26 +112,21 @@ func GofuzzDataDefinition(tb *TextBuilder, function GoFunction, repetitionsNumbe
 	return dataName
 }
 
-func GofuzzMainLoop(tb *TextBuilder, function GoFunction, repetitionsNumber int, dataName string) {
+func GofuzzMainLoop(tb *TextBuilder, function GoFunction, dataName string) {
 	counterName := "i"
+	argsName := "args"
 	tb.Section(func() {
-		forDefinition := fmt.Sprintf(
-			"for %s := 0; %s < %d; %s++ {",
-			counterName,
-			counterName,
-			repetitionsNumber,
-			counterName,
-		)
+		forDefinition := fmt.Sprintf("for %s, %s := range %s {", counterName, argsName, dataName)
 		tb.Subsection(forDefinition, "}", func() {
-			GofuzzMainLoopBlock(tb, function, dataName, counterName)
+			GofuzzMainLoopBlock(tb, function, argsName, counterName)
 		})
 	})
 }
 
-func GofuzzMainLoopBlock(tb *TextBuilder, function GoFunction, dataName string, counterName string) {
+func GofuzzMainLoopBlock(tb *TextBuilder, function GoFunction, argsName string, counterName string) {
 	paramNames := make([]string, len(function.Params()))
 	for i, param := range function.Params() {
-		paramNames[i] = fmt.Sprintf("%s[%s].%s", dataName, counterName, param.Name)
+		paramNames[i] = fmt.Sprintf("%s.%s", argsName, param.Name)
 	}
 	tb.Section(func() {
 		subtestRunning := fmt.Sprintf("t.Run(strconv.Itoa(%s), func(t *testing.T) {", counterName)
