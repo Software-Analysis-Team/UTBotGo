@@ -7,15 +7,13 @@ import (
 )
 
 func main() {
-	makefileText, _ := os.ReadFile(os.Args[1])
-	var values map[string]string
-	switch res := ScanBytes(makefileText, NewMakefileScanner()).(type) {
-	case MakefileData:
-		values = res.Values
-	}
-	inputText, _ := io.ReadAll(os.Stdin)
-	switch res := ScanBytes(inputText, NewTemplateScanner(values)).(type) {
-	case TemplateData:
-		fmt.Print(res.Output.String())
+	envText, _ := io.ReadAll(os.Stdin)
+	values := ReadEnv(envText)
+	var err error
+	for _, filePath := range os.Args[1:] {
+		err = PutValuesIntoFile(filePath, values)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
