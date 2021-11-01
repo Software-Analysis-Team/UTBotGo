@@ -1,7 +1,7 @@
 # Executable files
 #> {PROGRAM_NAME}
 utbotgo
-#> {SUB_PROGRAM_DIR}/{SUB_PROGRAM_NAME}
+#> {SUB_PROGRAM_PATH}
 templateApplier/templateApplier
 
 # IDEA directory
@@ -10,3 +10,7 @@ templateApplier/templateApplier
 # Directory of marks of make
 #> {MARK_DIR}
 .make
+
+# Internal additional makefiles
+#> {MAKE_DIR}/internal_*
+make/internal_*

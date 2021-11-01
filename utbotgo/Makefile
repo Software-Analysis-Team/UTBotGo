@@ -15,7 +15,7 @@ uninstall:
 	rm -f $(INSTALL_PATH)/$(PROGRAM_NAME)
 
 clean: uninstall
-	rm -rf $(PROGRAM_NAME) $(MARK_DIR)
+	rm -rf $(PROGRAM_NAME) $(MARK_DIR) $(SUB_PROGRAM_PATH)
 
 deep_clean: clean
 	rm -f go.mod go.sum
