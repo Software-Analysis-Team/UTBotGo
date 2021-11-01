@@ -1,4 +1,6 @@
+<!-- [ # {PROJECT_NAME} -->
 # UTBotGo
+<!-- ] -->
 
 Program for generating unit tests for Go files.
 
@@ -8,8 +10,13 @@ Program for generating unit tests for Go files.
 make install
 ```
 
+<!-- [
+This command installs program `{PROGRAM_NAME}` on your system, so you will be
+able to run the shell command `{PROGRAM_NAME}` from any directory.
+-->
 This command installs program `utbotgo` on your system, so you will be
 able to run the shell command `utbotgo` from any directory.
+<!-- ] -->
 
 > **NOTE**: You may need to run this command together with `sudo`.
 
@@ -21,9 +28,15 @@ make build
 
 ## How to use
 
+<!-- [
+```bash
+{PROGRAM_NAME} <option> <file_or_dir>
+```
+-->
 ```bash
 utbotgo <option> <file_or_dir>
 ```
+<!-- ] -->
 
 ### Option
 
@@ -43,9 +56,15 @@ generate testing files (files `*_test.go`).
 Output will contain amount of generated files.
 
 For example, if you have Go file `hello.go` and run
+<!-- [
 ```bash
-utbotgo hello.go
+{PROGRAM_NAME} --gofuzz hello.go
 ```
+-->
+```bash
+utbotgo --gofuzz hello.go
+```
+<!-- ] -->
 testing file `hello_test.go` will be generated, and output will be `1` (or `0`
 if error will be thrown).
 
@@ -55,6 +74,10 @@ if error will be thrown).
 make uninstall
 ```
 
+<!-- [
+It removes command `{PROGRAM_NAME}` from your system.
+-->
 It removes command `utbotgo` from your system.
+<!-- ] -->
 
 > **Note**: You may need to run this command together with `sudo`.
