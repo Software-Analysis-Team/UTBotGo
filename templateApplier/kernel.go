@@ -32,15 +32,6 @@ type FieldInfo struct{
 	paths Paths
 }
 
-func (fieldInfo FieldInfo) print(tab string) {
-	fmt.Printf("%svarIdx = %d; elemIdx = %d; elemWasLast = %#v; paths = {\n", tab, fieldInfo.varIdx, fieldInfo.elemIdx, fieldInfo.elemWasLast)
-	for fn, fi := range fieldInfo.paths {
-		fmt.Printf("%s %s:\n", tab, fn)
-		fi.print(tab + "  ")
-	}
-	fmt.Println(tab + "}")
-}
-
 type Paths map[FieldName]*FieldInfo
 
 type GetStatus byte
@@ -190,10 +181,6 @@ func (string_ String) setString(extVarName ExtVarName, value String, setType Set
 	default:
 		return nil, false
 	}
-}
-
-func (string_ String) print(tab string) {
-	fmt.Println(tab + string_.String())
 }
 
 func (string_ String) JoinStrings(strings []String) String {
