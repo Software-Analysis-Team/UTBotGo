@@ -1,9 +1,0 @@
-.ONESHELL: $(SUB_PROGRAM_DIR)/go.mod $(SUB_PROGRAM_PATH)
-
-$(SUB_PROGRAM_DIR)/go.mod:
-	cd $(SUB_PROGRAM_DIR)
-	go mod init $(PROJECT_PATH)/$(SUB_PROGRAM_NAME)
-
-$(SUB_PROGRAM_PATH): $(SUB_PROGRAM_DIR)/go.mod $(SUB_PROGRAM_DIR)/*.go
-	cd $(SUB_PROGRAM_DIR)
-	go build .

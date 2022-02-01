@@ -2,7 +2,7 @@ include .env
 
 include $(MAKE_DIR)/*.mk
 
-.PHONY: all build install uninstall clean deep-clean
+.PHONY: all build install uninstall clean deep_clean
 
 all: install build_project
 
@@ -15,7 +15,7 @@ uninstall:
 	rm -f $(INSTALL_PATH)/$(PROGRAM_NAME)
 
 clean: uninstall
-	rm -rf $(PROGRAM_NAME) $(MARK_DIR) $(SUB_PROGRAM_PATH)
+	rm -rf $(PROGRAM_NAME) $(MARK_DIR)
 
 deep_clean: clean
 	rm -f go.mod go.sum
