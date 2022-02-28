@@ -1,0 +1,7 @@
+#!/bin/bash
+build_script=$(go build -work -x $1 2>&1)
+file_name_without_ext=${1%.*}
+WORK_definition=$(echo "$build_script" | egrep '^WORK=')
+eval $WORK_definition
+llvm_goc_command=$(echo "$build_script" | egrep 'llvm-goc -c')
+eval $(echo $llvm_goc_command | sed "s/-O2/-O0/;s/-o [^ ]*/-o $file_name_without_ext.ll -S -emit-llvm -static-libgo/")

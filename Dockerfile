@@ -64,3 +64,17 @@ run mkdir klee/build; \
     make
 # Installing llvm, gollvm and klee
 env PATH="$PATH:/llvm-project/build/bin:/klee/build/bin"
+# Building and installing go
+run cd llvm-project; \
+    cmake \
+        -S llvm \
+        -B build \
+        -G Ninja \
+        -DCMAKE_INSTALL_PREFIX=/go \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLLVM_USE_LINKER=gold; \
+    cd build; \
+    ninja gollvm; \
+    ninja install-gollvm
+env LD_LIBRARY_PATH=/go/lib64
+env PATH="/go/bin:$PATH"
