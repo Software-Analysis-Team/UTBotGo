@@ -1,0 +1,380 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 40a9618..3b3635e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -15,6 +15,7 @@ include(ProcessorCount)
+ include(LLVMExternalProjectUtils)
+ 
+ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
++set(GOLLVM_BUILD_LLVM_BC_LIBRARY OFF CACHE BOOL "generate LLVM bitcode of stdlib")
+ set(GOLLVM_USE_SPLIT_STACK ON CACHE BOOL "use split stack by default")
+ set(GOLLVM_DEFAULT_LINKER gold CACHE STRING "default linker for Go links")
+ 
+@@ -84,6 +85,7 @@ externalproject_add(libmpc
+ # Top level targets for building, installing
+ add_custom_target(gollvm ALL)
+ add_custom_target(install-gollvm)
++add_dependencies(install-gollvm gollvm)
+ 
+ # In most use cases, we want to force a rebuild of all objects built
+ # from Go source if the compiler changes.
+diff --git a/cmake/modules/BitcodeLibrary.cmake b/cmake/modules/BitcodeLibrary.cmake
+new file mode 100644
+index 0000000..8588c81
+--- /dev/null
++++ b/cmake/modules/BitcodeLibrary.cmake
+@@ -0,0 +1,117 @@
++
++# This function adds target for creating bitcode of library. It accepts *.bc
++# and *.c files and create LLVM bitcode file of library from input files.
++#
++# Unnamed parameters:
++#
++#   * library name
++#
++# Named parameters:
++#
++#   FILES           *.c and *.bc source files of library
++#   DEPENDS         dependences for target ${libname}_bclib (in addition to auto-generated)
++#   DIR             output directory for library (default is ".") (DIR must exist)
++#   NOT_LINK        not link library from prepared bitcode files
++#   C_FLAGS         extra flags for compiling *.c files (as is, with spaces between them)
++#   C_INCLUDE_DIRS  directories for -I flag for compiling *.c files
++#
++# Used global variables:
++#
++#   * libsubdir
++#
++# Output variables:
++#
++#   * ${libname}_bclib_path
++#     - path to library (if NOT_LINK is omitted)
++#     - list of paths to prepared bitcode files (if NOT_LINK is specified)
++#
++# Output targets:
++#
++#   * ${libname}_bclib          create bitcode library
++#   * install-${libname}_bclib  install bitcode library (only if NOT_LINK is omitted)
++
++function(add_bc_library libname)
++  cmake_parse_arguments(ARG "NOT_LINK" "DIR;C_FLAGS" "FILES;DEPENDS;C_INCLUDE_DIRS" ${ARGN})
++
++  # Extract *.bc files
++  set(bc_files ${ARG_FILES})
++  list(FILTER bc_files INCLUDE REGEX ".*\\.bc$")
++
++  # Extract *.c files
++  set(c_files ${ARG_FILES})
++  list(FILTER c_files INCLUDE REGEX ".*\\.c$")
++
++  # Extract other files
++  set(other_files ${ARG_FILES})
++  list(REMOVE_ITEM other_files ${bc_files} ${c_files})
++
++  # Check that there are no other files
++  foreach(other_file ${other_files})
++    message(WARNING "There is file with unknown extension '${other_file}'")
++  endforeach()
++
++  # Define path to directory of library
++  set(libdir ${ARG_DIR})
++  if("${libdir}" STREQUAL "")
++    set(libdir ".")
++  endif()
++
++  # Define target name for library
++  set(libtarget "${libname}_bclib")
++
++  # Define flags for include directories (+ some common directories)
++  set(includes
++    ${ARG_C_INCLUDE_DIRS}
++    ${LIBGO_INCLUDE_DIR}
++    ${LIBGO_MAIN_INCLUDE_DIR}
++    ${LLVM_INCLUDE_DIR}
++    ${LLVM_MAIN_INCLUDE_DIR})
++  list(TRANSFORM includes PREPEND "-I")
++
++  # Define other flags
++  set(extra_flags "-Wall -Wextra -pedantic -O3 -fdiagnostics-color")
++  set(flags "-c -emit-llvm ${extra_flags} ${ARG_C_FLAGS}")
++  separate_arguments(flags)
++
++  # Convert all files to bitcode files
++  set(prepared_files ${bc_files})
++  set(prepared_targets)
++  foreach(c_file ${c_files})
++    set(bc_file "${libdir}/${libname}/${c_file}.bc")
++    set(bc_target "${libtarget}_${bc_file}")
++    get_filename_component(bc_dir ${bc_file} DIRECTORY)
++    string(REPLACE "/" "_" bc_target "${bc_target}")
++    add_custom_target(${bc_target}
++      COMMAND ${CMAKE_COMMAND} -E make_directory ${bc_dir}
++      COMMAND clang ${flags} ${includes} -o ${bc_file} ${c_file}
++      DEPENDS clang
++      COMMENT "Compiling C file '${c_file}' to LLVM bitcode file")
++    list(APPEND prepared_files ${bc_file})
++    list(APPEND prepared_targets ${bc_target})
++  endforeach()
++
++  # Define main targets and return path to library (or paths to prepared bitcode files)
++  if(NOT ARG_NOT_LINK)
++    set(libfile "${libname}.bc")
++    set(libpath "${libdir}/${libfile}")
++    add_custom_target(${libtarget}
++      COMMAND llvm-link -o ${libpath} ${prepared_files}
++      DEPENDS llvm-link ${prepared_targets} ${ARG_DEPENDS}
++      COMMENT "Linking '${libname}' LLVM bitcode library"
++      )
++    # While don't work
++    #install(FILES ${libfile}
++    #  COMPONENT ${libtarget}
++    #  DESTINATION ${libsubdir})
++    #add_custom_target(install-${libtarget}
++    #  DEPENDS ${libtarget}
++    #  COMMAND "${CMAKE_COMMAND}"
++    #  -DCMAKE_INSTALL_COMPONENT=${libtarget}
++    #  -P "${CMAKE_BINARY_DIR}/cmake_install.cmake")
++    #add_dependencies(install-gollvm install-${libtarget})
++    set("${libname}_bclib_path" ${libpath} PARENT_SCOPE)
++  else()
++    add_custom_target(${libtarget} DEPENDS ${prepared_targets})
++    set("${libname}_bclib_path" ${prepared_files} PARENT_SCOPE)
++  endif()
++endfunction()
+diff --git a/cmake/modules/GoPackage.cmake b/cmake/modules/GoPackage.cmake
+index 7e9e065..30487d7 100644
+--- a/cmake/modules/GoPackage.cmake
++++ b/cmake/modules/GoPackage.cmake
+@@ -19,9 +19,10 @@
+ # GODEP     Names of export files for packages this package depends on.
+ # GOCFLAGS  Additional arguments passed to Go compiler.
+ # NOPIC     Don't bother to produce a PIC object, create only non-PIC.
++# LLVM_BC   Generate a LLVM bitcode file
+ 
+ function(add_go_package pkgpath dest)
+-  CMAKE_PARSE_ARGUMENTS(ARG "NOPIC" "" "GOSRC;GODEP;GOCFLAGS" ${ARGN})
++  CMAKE_PARSE_ARGUMENTS(ARG "NOPIC;LLVM_BC" "" "GOSRC;GODEP;GOCFLAGS" ${ARGN})
+ 
+   # Split package path into name and containing_dir
+   get_filename_component(pdir "${pkgpath}" DIRECTORY)
+@@ -45,6 +46,9 @@ function(add_go_package pkgpath dest)
+   set(package_ofile "${dest}/${pdir}/${name}.o")
+   set(package_picofile "${dest}/${pdir}/.pic/${name}.o")
+ 
++  # LLVM bitcode file
++  set(package_bcfile "${dest}/${pdir}/${name}.bc")
++
+   # Export file, export file temp.
+   set(package_goxfile "${dest}/${pdir}/${name}.gox")
+   set(package_goxtmp "${dest}/${pdir}/${name}.gox.tmp")
+@@ -79,6 +83,19 @@ function(add_go_package pkgpath dest)
+     set(package_picofile)
+   endif()
+ 
++  # Command to build LLVM bitcode file
++  if(ARG_LLVM_BC)
++    add_custom_command(
++      OUTPUT ${package_bcfile}
++      COMMAND "${gocompiler}" "-c" "-o" ${package_bcfile} -emit-llvm "-fgo-pkgpath=${pkgpath}" ${ARG_GOCFLAGS} -I . ${ARG_GOSRC}
++      DEPENDS ${ARG_GOSRC} ${godeps} ${gocdep}
++      COMMENT "Building Go package '${pkgpath}' (LLVM bitcode)"
++      VERBATIM)
++    list(APPEND pkg_outputs "${package_bcfile}")
++  else()
++    set(package_bcfile)
++  endif()
++
+   # Command to build *.gox.tmp
+   add_custom_command(
+     OUTPUT "${package_goxtmp}"
+@@ -110,7 +127,9 @@ function(add_go_package pkgpath dest)
+   # Caller needs to know these.
+   set(package_ofile ${package_ofile} PARENT_SCOPE)
+   set(package_picofile ${package_picofile} PARENT_SCOPE)
++  set(package_bcfile ${package_bcfile} PARENT_SCOPE)
+   set(package_goxfile ${package_goxfile} PARENT_SCOPE)
++  set(package_target ${pkgtarget} PARENT_SCOPE)
+ 
+   # *.gox files are installed in <lib>/go/<ver>/<triple>
+   set(goxinstalldest "lib${library_suffix}/go/${libversion}/${LLVM_DEFAULT_TARGET_TRIPLE}/${pdir}")
+diff --git a/cmake/modules/LibbacktraceUtils.cmake b/cmake/modules/LibbacktraceUtils.cmake
+index dc54f18..e819a50 100644
+--- a/cmake/modules/LibbacktraceUtils.cmake
++++ b/cmake/modules/LibbacktraceUtils.cmake
+@@ -90,4 +90,15 @@ function(setup_libbacktrace)
+   set_target_properties(libbacktrace_piclib
+     PROPERTIES COMPILE_FLAGS "-fPIC ${libbacktraceflags}")
+ 
++  # LLVM bitcode
++  if(GOLLVM_BUILD_LLVM_BC_LIBRARY)
++    add_bc_library(libbacktrace
++      FILES ${libbacktracecfiles}
++      DIR ${libgo_binroot}
++      NOT_LINK
++      C_FLAGS "-D_GNU_SOURCE ${libbacktraceflags}"
++      C_INCLUDE_DIRS "${libgo_binroot}/libbacktrace")
++    set(libbacktrace_bclib_path "${libbacktrace_bclib_path}" PARENT_SCOPE)
++  endif()
++
+ endfunction()
+diff --git a/cmake/modules/LibffiUtils.cmake b/cmake/modules/LibffiUtils.cmake
+index 035b647..132a928 100644
+--- a/cmake/modules/LibffiUtils.cmake
++++ b/cmake/modules/LibffiUtils.cmake
+@@ -2,6 +2,7 @@
+ 
+ include(CheckTypeSize)
+ include(CheckFunctionExists)
++include(BitcodeLibrary)
+ 
+ function(setup_libffi libffi_srcroot)
+ 
+@@ -104,4 +105,15 @@ function(setup_libffi libffi_srcroot)
+   set_target_properties(libffi_piclib PROPERTIES COMPILE_FLAGS "-fPIC ${libffiflags}")
+   target_include_directories(libffi_piclib PUBLIC "${libffi_srcroot}/include")
+ 
++  # Create libffi LLVM bitcode libraries
++  if(GOLLVM_BUILD_LLVM_BC_LIBRARY)
++    add_bc_library(libffi
++      FILES ${c_srcs} ${asm_srcs}
++      DIR ${libgo_binroot}
++      NOT_LINK
++      C_FLAGS ${libffiflags}
++      C_INCLUDE_DIRS "${libffi_srcroot}/include")
++    set(libffi_bclib_path "${libffi_bclib_path}" PARENT_SCOPE)
++  endif()
++
+ endfunction()
+diff --git a/libgo/CMakeLists.txt b/libgo/CMakeLists.txt
+index 78df6cf..3d7eeff 100644
+--- a/libgo/CMakeLists.txt
++++ b/libgo/CMakeLists.txt
+@@ -16,6 +16,7 @@ include(GoPackage)
+ include(StructConfigUtils)
+ include(LibbacktraceUtils)
+ include(LibffiUtils)
++include(BitcodeLibrary)
+ 
+ # Root of libgo sources.
+ set(libgo_srcroot "${GOLLVM_SOURCE_DIR}/gofrontend/libgo")
+@@ -38,6 +39,10 @@ set(libffi_srcroot "${CMAKE_CURRENT_SOURCE_DIR}/libffi")
+ # Binary root (top level of libgo build).
+ set(libgo_binroot "${CMAKE_CURRENT_BINARY_DIR}")
+ 
++# Directories with header files
++set(LIBGO_MAIN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
++set(LIBGO_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR})
++
+ #........................................................................
+ #
+ # Call a helper to set up libbacktrace. This also creates the libbacktrace
+@@ -383,7 +388,9 @@ message(STATUS "Libgo: creating stdlib package targets")
+ 
+ set(libgo_go_picobjects)
+ set(libgo_go_nonpicobjects)
++set(libgo_go_bcobjects)
+ set(libgo_goxfiles)
++set(libgo_packages)
+ set(libgotool_nonpicobjects)
+ 
+ # Process each package
+@@ -404,14 +411,22 @@ foreach( pack ${allpackages})
+     set(nopic "NOPIC")
+   endif()
+ 
++  # If this is not a gotool package and we need a LLVM bitcode file of library, we need a LLVM bitcode file of package
++  set(llvm_bc)
++  if(${found} EQUAL -1 AND GOLLVM_BUILD_LLVM_BC_LIBRARY)
++    set(llvm_bc "LLVM_BC")
++  endif()
++
+   # Call into helper to create rules for package.
+-  add_go_package("${pack}" "${libgo_binroot}" GOSRC ${packsrcs} GODEP ${packdeps} GOCFLAGS ${packopts} ${libgo_extra_gocflags} ${nopic})
++  add_go_package("${pack}" "${libgo_binroot}" GOSRC ${packsrcs} GODEP ${packdeps} GOCFLAGS ${packopts} ${libgo_extra_gocflags} ${nopic} ${llvm_bc})
+ 
+   # Accumulate libgo objects.
+   if(${found} EQUAL -1)
+     list(APPEND libgo_go_picobjects ${package_picofile})
+     list(APPEND libgo_go_nonpicobjects ${package_ofile})
++    list(APPEND libgo_go_bcobjects ${package_bcfile})
+     list(APPEND libgo_goxfiles ${package_goxfile})
++    list(APPEND libgo_packages ${package_target})
+   else()
+     list(APPEND libgotool_nonpicobjects ${package_ofile})
+   endif()
+@@ -544,6 +559,20 @@ target_include_directories(libgo_c_nonpiclib PUBLIC
+   ${libbacktrace_srcroot})
+ add_dependencies(libgo_c_nonpiclib runtimeinctarg)
+ 
++# LLVM bitcode library from libgo C code
++if(GOLLVM_BUILD_LLVM_BC_LIBRARY)
++  add_bc_library(libgo_c
++    FILES ${runtimecpaths}
++    DEPENDS runtimeinctarg
++    DIR ${libgo_binroot}
++    NOT_LINK
++    C_FLAGS ${baseopts}
++    C_INCLUDE_DIRS
++      "${libgo_csrcroot}/runtime"
++      "${libgo_binroot}/runtime"
++      ${libbacktrace_srcroot})
++endif()
++
+ # Static libgo -- combines non-pic C objects and non-pic Go objects
+ add_gollvm_library(libgo_static STATIC
+   $<TARGET_OBJECTS:libgo_c_nonpiclib>
+@@ -588,6 +617,15 @@ set_target_properties(libgobegin PROPERTIES COMPILE_FLAGS "${baseopts} -fPIC")
+ set_target_properties(libgobegin PROPERTIES OUTPUT_NAME "gobegin")
+ set_target_properties(libgobegin PROPERTIES
+   ARCHIVE_OUTPUT_DIRECTORY ${libgo_binroot})
++# LLVM bitcode library
++add_bc_library(libgobegin
++  FILES ${libgobegincfiles}
++  DEPENDS runtimeinctarg
++  DIR ${libgo_binroot}
++  C_FLAGS ${baseopts}
++  C_INCLUDE_DIRS
++    "${libgo_csrcroot}/runtime"
++    "${libgo_binroot}/runtime")
+ 
+ # Sources for libgolibbegin.a
+ set(libgolibbegincfiles
+@@ -605,12 +643,38 @@ set_target_properties(libgolibbegin PROPERTIES
+ set_target_properties(libgolibbegin PROPERTIES OUTPUT_NAME "golibbegin")
+ set_target_properties(libgolibbegin PROPERTIES
+   ARCHIVE_OUTPUT_DIRECTORY ${libgo_binroot})
++# LLVM bitcode library
++add_bc_library(libgolibbegin
++  FILES ${libgolibbegincfiles}
++  DEPENDS runtimeinctarg
++  DIR ${libgo_binroot}
++  C_FLAGS ${baseopts}
++  C_INCLUDE_DIRS
++    "${libgo_csrcroot}/runtime"
++    "${libgo_binroot}/runtime")
+ 
+ # Pseudo-target for all libgo buildables.
+ add_custom_target(libgo_all DEPENDS
+   llvm-goc libgo_static libgo_shared libgobegin libgolibbegin)
+ add_dependencies(gollvm libgo_all)
+ 
++# Generate LLVM bitcode of stdlib if necessary
++if(GOLLVM_BUILD_LLVM_BC_LIBRARY)
++  add_bc_library(libgo
++    DIR ${libgo_binroot}
++    FILES
++      ${libgo_go_bcobjects}
++      ${libgo_c_bclib_path}
++      ${libffi_bclib_path}
++      ${libbacktrace_bclib_path}
++    DEPENDS
++      ${libgo_packages}
++      libgo_c_bclib
++      libffi_bclib
++      libbacktrace_bclib)
++  add_dependencies(libgo_all libgo_bclib)
++endif()
++
+ # Create a target-specific symlink to the Go library dir. This is
+ # an interim solution; ideally we want to key off of CMAKE_INSTALL_PREFIX.
+ execute_process(COMMAND ${CMAKE_COMMAND}
