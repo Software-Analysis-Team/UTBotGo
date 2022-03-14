@@ -1,0 +1,24 @@
+diff --git a/libgo/runtime/aeshash.c b/libgo/runtime/aeshash.c
+index 93f28fd6..524c4176 100644
+--- a/libgo/runtime/aeshash.c
++++ b/libgo/runtime/aeshash.c
+@@ -21,7 +21,11 @@ uintptr aeshashbody(void*, uintptr, uintptr, Slice)
+ // Force appropriate CPU level.  We won't call here unless the CPU
+ // supports it.
+ 
++#ifdef __clang__
++#pragma clang attribute push (__attribute__((target("ssse3,aes"))), apply_to=function)
++#else
+ #pragma GCC target("ssse3", "aes")
++#endif
+ 
+ #ifdef __x86_64__
+ 
+@@ -983,3 +987,7 @@ uintptr aeshashbody(void* p __attribute__((unused)),
+ }
+ 
+ #endif // !defined(__i386__) && !defined(__x86_64__) || !defined(HAVE_AS_X86_AES)
++
++#ifdef __clang__
++#pragma clang attribute pop
++#endif

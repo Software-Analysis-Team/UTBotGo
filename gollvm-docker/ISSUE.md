@@ -4,12 +4,12 @@
 
 1.  Собрать docker-образ
 ```
-docker build -t gollvm_klee:5 .
+docker build -t gollvm_klee:6 .
 ```
 
 2.  Запустить docker-контейнер
 ```
-docker run -it --rm -v ${PWD}:/home gollvm_klee:5
+docker run -it --rm -v ${PWD}:/home gollvm_klee:6
 ```
 
 3.  Транслировать Go-файл в ll-файл
@@ -26,7 +26,7 @@ g++ -O3 -Wall $(llvm-config --cxxflags) -o modifier modifier.cpp $(llvm-config -
 
 5.  Сгенерировать тесты с помощью klee (не работает)
 ```
-klee --disable-verify --external-calls=all simple_fixed.ll
+klee --disable-verify --external-calls=all --disable-internalize --link-llvm-lib=/llvm-project/build/tools/gollvm/libgo/libgo.bc simple_fixed.ll
 ```
 
 ## Замечания
@@ -34,3 +34,5 @@ klee --disable-verify --external-calls=all simple_fixed.ll
   * `/go/lib64/libgo.so` -- стандартная библиотека для Go
 
   * `go build -n simple.go` -- команда для просмотра bash-скрипта сборки (не работает после запуска `go2ll`)
+
+  * `/llvm-project/build/tools/gollvm/libgo/libgo.bc` -- стандартная библиотека Go в виде LLVM bitcode-а

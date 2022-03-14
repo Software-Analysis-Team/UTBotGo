@@ -64,6 +64,13 @@ run mkdir klee/build; \
     make
 # Installing llvm, gollvm and klee
 env PATH="$PATH:/llvm-project/build/bin:/klee/build/bin"
+# Updating sources of gollvm and gofrontend
+copy gollvm.patch gollvm.patch
+copy gofrontend.patch gofrontend.patch
+run cd llvm-project/llvm/tools/gollvm; \
+    git apply /gollvm.patch
+run cd llvm-project/llvm/tools/gollvm/gofrontend; \
+    git apply /gofrontend.patch
 # Building and installing go
 run cd llvm-project; \
     cmake \
@@ -72,9 +79,9 @@ run cd llvm-project; \
         -G Ninja \
         -DCMAKE_INSTALL_PREFIX=/go \
         -DCMAKE_BUILD_TYPE=Release \
-        -DLLVM_USE_LINKER=gold; \
+        -DLLVM_USE_LINKER=gold \
+        -DGOLLVM_BUILD_LLVM_BC_LIBRARY=On; \
     cd build; \
-    ninja gollvm; \
     ninja install-gollvm
 env LD_LIBRARY_PATH=/go/lib64
 env PATH="/go/bin:$PATH"
