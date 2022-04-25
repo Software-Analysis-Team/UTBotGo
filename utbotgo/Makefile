@@ -1,21 +1,32 @@
 include .env
 
-include $(MAKE_DIR)/*.mk
+SHELL = /usr/bin/env bash
 
-.PHONY: all build install uninstall clean deep_clean
+.PHONY: all build install uninstall clean
 
-all: install build_project
+all: build
 
-build: $(PROGRAM_NAME)
+build: .docker_image
+	docker run \
+        --rm \
+        -v $${PWD}:/utbotgo \
+        -w /utbotgo/utils \
+        utbotgo:${UTBOTGO_VERSION} \
+        make
 
-install: build
-	install $(PROGRAM_NAME) $(INSTALL_PATH)
+.docker_image: Dockerfile .env
+	docker build -t utbotgo:$(UTBOTGO_VERSION) .
+	touch .docker_image
+
+install: /usr/bin/utbotgo
+
+/usr/bin/utbotgo: utbotgo.sh .env build
+	sed -e "s/##utbotgo_dir/$${PWD//\//\\\/}/" < $< > $@
 
 uninstall:
-	rm -f $(INSTALL_PATH)/$(PROGRAM_NAME)
+	rm -f /usr/bin/utbotgo
 
 clean: uninstall
-	rm -rf $(PROGRAM_NAME) $(MARK_DIR)
-
-deep_clean: clean
-	rm -f go.mod go.sum
+	cd utils; $(MAKE) clean
+	docker rmi utbotgo:$(UTBOTGO_VERSION)
+	rm -f .docker_image

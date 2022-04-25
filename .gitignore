@@ -1,4 +1,1 @@
-*.ll
-klee-*
-modifier
-simple
+**/.idea
