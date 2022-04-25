@@ -1,121 +1,53 @@
-<!--[
-# {PROJECT_NAME}
-|-->
 # UTBotGo
-<!--]-->
 
-Program for generating unit tests for Go files.
+## Building
 
-## How to install
-
-<!--$ command += make install -->
-<!--[
-```bash
-{command}
 ```
-|-->
-```bash
+make
+```
+
+This command build docker image from `Dockerfile` and build helpful utilities
+in `utils` directory.
+
+## Installing
+
+```
 make install
 ```
-<!--]-->
 
-<!--[
-This command installs program `{PROGRAM_NAME}` on your system, so you will be
-able to run the shell command `{PROGRAM_NAME}` from any directory.
-|-->
-This command installs program `utbotgo` on your system, so you will be
-able to run the shell command `utbotgo` from any directory.
-<!--]-->
+This install `utbotgo` command to your system.
 
-> **NOTE**: You may need to run this command together with `sudo`.
+> Note: it may require `root` rights.
 
-If you want just build this program without installation, you can type
+## Running
 
-<!--[
-```bash
-make build
+1.  Go to example
+
 ```
-|-->
-```bash
-make build
+cd ../examples/test1/
 ```
-<!--]-->
 
-## How to use
+2.  Initialize directory for working `utbotgo` command
 
-<!--[
-```bash
-{PROGRAM_NAME} <option> <file_or_dir>
 ```
-|-->
-```bash
-utbotgo <option> <file_or_dir>
+utbotgo init
 ```
-<!--]-->
 
-### Option
+3.  Edit `config.yml` file in directory `utbotgo/`
 
-* `--gofuzz` - use package [gofuzz](https://github.com/google/gofuzz) for
-fuzzing
-
-* `--go-fuzz` - use package [go-fuzz](https://github.com/dvyukov/go-fuzz) for
-fuzzing
-
-### File or dir
-
-It is name of Go file or directory with Go files, for  which you want to
-generate testing files (files `*_test.go`).
-
-### Output
-
-Output will contain amount of generated files.
-
-For example, if you have Go file `hello.go` and run
-<!--$ command += {PROGRAM_NAME} --gofuzz hello.go -->
-<!--[
-```bash
-{command}
 ```
-|-->
-```bash
-utbotgo --gofuzz hello.go
+echo "tested-functions:" > utbotgo/config.yml
+echo "  - getSign" >> utbotgo/config.yml
 ```
-<!--]-->
-testing file `hello_test.go` will be generated, and output will be `1` (or `0`
-if error will be thrown).
 
-## How to uninstall
+4.  Run testing
 
-<!--$ command += make uninstall -->
-<!--[
-```bash
-{command}
 ```
-|-->
-```bash
-make uninstall
+utbotgo test
 ```
-<!--]-->
 
-<!--[
-It removes command `{PROGRAM_NAME}` from your system.
-|-->
-It removes command `utbotgo` from your system.
-<!--]-->
+5.  (optional) See generated test arguments for function `getSign`
 
-> **Note**: You may need to run this command together with `sudo`.
-
-## Tests
-
-<!--[
 ```
-{$ {command}|
-}
+cat utbotgo/functions/getSign/args.json
 ```
-|-->
-```
-$ make install
-$ utbotgo --gofuzz hello.go
-$ make uninstall
-```
-<!--]-->

@@ -1,0 +1,105 @@
+12a13
+> import base64
+14a16
+> import json
+27a30
+>     valid_types = {'hex', 'int', 'uint', 'text', 'b64'}
+75a79
+>         self.object_types = dict()
+94a99
+>         fmt['b64' ] = "object {0:" + width + "d}: b64 : {1}"
+98c103,105
+<             def p(key, arg): print(fmt[key].format(i, arg), file=sio)
+---
+>             def p(key, arg, ty=None, print_if_ty_is_None=True):
+>                 if arg is not None and ((ty is None and print_if_ty_is_None) or ty == key):
+>                     print(fmt[key].format(i, arg), file=sio)
+101,102c108
+<             txt = ''.join(c if c in self.valid_chars else '.' for c in blob.decode('ascii', errors='replace').replace('�', '.'))
+<             size = len(data)
+---
+>             ty = self.object_types.get(name)
+107,113c113,117
+<             p('hex', binascii.hexlify(blob).decode('ascii'))
+<             for n, m in [(1, 'b'), (2, 'h'), (4, 'i'), (8, 'q')]:
+<                 if size == n:
+<                     p('int', struct.unpack(m, data)[0])
+<                     p('uint', struct.unpack(m.upper(), data)[0])
+<                     break
+<             p('text', txt)
+---
+>             p('hex',  self.convert_to_type(blob, 'hex' ), ty)
+>             p('int',  self.convert_to_type(data, 'int' ), ty)
+>             p('uint', self.convert_to_type(data, 'uint'), ty)
+>             p('text', self.convert_to_type(blob, 'text'), ty)
+>             p('b64',  self.convert_to_type(data, 'b64' ), ty, False)
+116a121,139
+>     def convert_to_type(self, data, ty):
+>         if ty == 'hex':
+>             return binascii.hexlify(data).decode('ascii')
+>         if ty == 'int':
+>             size = len(data)
+>             for n, m in [(1, 'b'), (2, 'h'), (4, 'i'), (8, 'q')]:
+>                 if size == n:
+>                     return struct.unpack(m, data)[0]
+>         if ty == 'uint':
+>             size = len(data)
+>             for n, m in [(1, 'b'), (2, 'h'), (4, 'i'), (8, 'q')]:
+>                 if size == n:
+>                     return struct.unpack(m.upper(), data)[0]
+>         if ty == 'text':
+>             return ''.join(c if c in self.valid_chars else '.' for c in data.decode('ascii', errors='replace').replace('�', '.'))
+>         if ty == 'b64':
+>             return base64.b64encode(data)
+>         return None
+> 
+132a156,180
+>     def add_types_info(self, path):
+>         try:
+>             f = open(path, 'r')
+>         except IOError:
+>             print('ERROR: file %s not found' % path)
+>             sys.exit(1)
+> 
+>         types_text = f.read()
+>         types_json = json.loads(types_text)
+> 
+>         if type(types_json) is not dict:
+>             sys.exit(f'File {path} must contain JSON object')
+> 
+>         for obj_name, obj_type in types_json.items():
+>             if obj_type in self.valid_types:
+>                 self.object_types[obj_name] = obj_type
+> 
+>     def to_json(self):
+>         # FIXME add using flag --trim-zeros
+>         result = dict()
+>         for name, data in self.objects:
+>             ty = self.object_types.get(name, 'b64')
+>             result[name] = self.convert_to_type(data, ty)
+>         return result
+> 
+176a225,227
+>     ap.add_argument('--types', help='types of objects', metavar='file', action='append', default=[])
+>     ap.add_argument('--total-types', help='types of objects for all .ktest files', metavar='file')
+>     ap.add_argument('--to-json', help='print into json format', action='store_true')
+180c231,234
+<     for file in args.files:
+---
+>     args_types = args.types + [args.total_types] * max(0, len(args.files) - len(args.types))
+>     result_json = [] # use only if flag --to-json is specified
+> 
+>     for file, types_file in zip(args.files, args_types):
+181a236,237
+>         if types_file is not None:
+>             ktest.add_types_info(types_file)
+186c242,248
+<             print(fmt.format(ktest), end='')
+---
+>             if args.to_json:
+>                 result_json.append(ktest.to_json())
+>             else:
+>                 print(fmt.format(ktest), end='')
+> 
+>     if args.to_json:
+>         print(json.dumps(result_json))
