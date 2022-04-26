@@ -10,6 +10,7 @@ jobs:
       run:
         working-directory: ./examples/test1
     steps:
+      - uses: actions/checkout@v2
       - name: Install
         run: make -C ../../utbotgo install
       - name: Initialize
