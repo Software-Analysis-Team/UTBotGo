@@ -1,0 +1,22 @@
+name: Build and run `utbotgo` tool
+on:
+  push:
+    branches: [build_and_run]
+jobs:
+  build_and_run:
+    name: Build and run `utbotgo` tool
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./examples/test1
+    steps:
+      - name: Install
+        run: make -C ../../utbotgo install
+      - name: Initialize
+        run: utbotgo init
+      - name: Edit configuration
+        run: |
+          echo "tested-functions:" > utbotgo/config.yml
+          echo "  - getSign" >> utbotgo/config.yml
+      - name: Run test generation
+        run: utbotgo test
