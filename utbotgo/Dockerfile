@@ -28,9 +28,16 @@ run cd llvm-project/llvm/tools; \
     cd gollvm; \
     git checkout f17ba8c7708356ef447525e05cd6f2770845c7d7; \
     git clone https://go.googlesource.com/gofrontend; \
-    cd libgo; \
+    cd gofrontend; \
+    git checkout 3e9f4ee16683883ccfb8661d99318c74bb7a4bef; \
+    cd ../libgo; \
     git clone https://github.com/libffi/libffi.git; \
-    git clone https://github.com/ianlancetaylor/libbacktrace.git
+    cd libffi; \
+    git checkout b60d4fc7bb4419021bf566e09de55ed1d9b041db; \
+    cd ..; \
+    git clone https://github.com/ianlancetaylor/libbacktrace.git; \
+    cd libbacktrace; \
+    git checkout d0f5e95a87a4d3e0a1ed6c069b5dae7cbab3ed2a
 # Building llvm and gollvm
 run cd llvm-project; \
     mkdir build; \
@@ -42,7 +49,7 @@ run cd llvm-project; \
         -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_ENABLE_ASSERTIONS=On; \
     cd build; \
-    ninja -j 2
+    ninja
 # Downloading klee
 run wget -q -O klee.zip \
         https://github.com/klee/klee/archive/dfec2ced4e90e745631331ee087f19224df864a0.zip; \
