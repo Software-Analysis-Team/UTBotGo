@@ -18,13 +18,14 @@ build: .docker_image
 	docker build -t utbotgo:$(UTBOTGO_VERSION) .
 	touch .docker_image
 
-install: /usr/bin/utbotgo
+install: $(UTBOTGO_BIN_DIR)/utbotgo
 
-/usr/bin/utbotgo: utbotgo.sh .env build
+$(UTBOTGO_BIN_DIR)/utbotgo: utbotgo.sh .env build
 	sed -e "s/##utbotgo_dir/$${PWD//\//\\\/}/" < $< > $@
+	chmod ugo+x $@
 
 uninstall:
-	rm -f /usr/bin/utbotgo
+	rm -f $(UTBOTGO_BIN_DIR)/utbotgo
 
 clean: uninstall
 	cd utils; $(MAKE) clean
