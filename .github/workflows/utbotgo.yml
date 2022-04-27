@@ -11,13 +11,17 @@ jobs:
         working-directory: ./examples/test1
     steps:
       - uses: actions/checkout@v2
+      - name: Edit `.env` file
+        run: |
+          echo "UTBOTGO_VERSION=0.0" > ../../utbotgo/.env
+          echo "UTBOTGO_BIN_DIR=../examples" >> ../../utbotgo/.env
       - name: Install
         run: sudo make -C ../../utbotgo install
       - name: Initialize
-        run: utbotgo init
+        run: ../utbotgo init
       - name: Edit configuration
         run: |
           echo "tested-functions:" > utbotgo/config.yml
           echo "  - getSign" >> utbotgo/config.yml
       - name: Run test generation
-        run: utbotgo test
+        run: ../utbotgo test
