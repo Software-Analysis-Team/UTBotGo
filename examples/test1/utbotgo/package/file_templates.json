@@ -1,0 +1,5 @@
+{
+    "args": "utbotgo/functions/%/args.json",
+    "answers": "utbotgo/functions/%/answers.json",
+    "results": "utbotgo/functions/%/results.json"
+}

@@ -1,0 +1,26 @@
+{
+	"Dir": "/workspace",
+	"ImportPath": "simpleTest3",
+	"Name": "main",
+	"Target": "/root/go/bin/simpleTest3",
+	"Root": "/workspace",
+	"Module": {
+		"Path": "simpleTest3",
+		"Main": true,
+		"Dir": "/workspace",
+		"GoMod": "/workspace/go.mod",
+		"GoVersion": "1.17"
+	},
+	"Match": [
+		"."
+	],
+	"Stale": true,
+	"StaleReason": "build ID mismatch",
+	"GoFiles": [
+		"getSign.go",
+		"main.go"
+	],
+	"Deps": [
+		"runtime"
+	]
+}

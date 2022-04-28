@@ -1,0 +1,1 @@
+{"package": {"name": "main"}, "files": {"args": {"name": "utbotgo/functions/getSign/args.json"}, "answers": {"name": "utbotgo/functions/getSign/answers.json"}, "results": {"name": "utbotgo/functions/getSign/results.json"}}, "func": {"name": "getSign", "args": [{"name": "x", "type": "int"}], "result": {"type": "int"}}}
