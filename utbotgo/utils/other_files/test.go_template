@@ -67,9 +67,10 @@ func Test_utbotgo_{{func.name}}(t *testing.T) {
 		t.Run("test_#" + strconv.Itoa(i+1), func(t_ *testing.T) {
 			results[i] = utbotgo_result_{{func.name}}({{func.name}}({{args[i].A{{func.args.name}}}|{, }}))
 			if i >= len(answers) {
-				t_.Logf("\nexpected is unknown\nactual: %#v\n", results[i])
+				t_.Logf("\narguments: %v\nexpected is unknown\nactual: %#v\n", args[i], results[i])
+				t_.Fail()
 			} else if answers[i] != results[i] {
-				t_.Logf("\nexpected: %#v\nactual: %#v\n", answers[i], results[i])
+				t_.Logf("\narguments: %v\nexpected: %#v\nactual: %#v\n", args[i], answers[i], results[i])
 				t_.Fail()
 			}
 		})
