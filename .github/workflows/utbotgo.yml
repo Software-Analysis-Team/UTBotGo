@@ -3,12 +3,23 @@ on:
   push:
     branches: [build_and_run]
 jobs:
-  build_and_run:
-    name: Build and run `utbotgo` tool
+  build:
+    name: Pull or build Docker image and install `utbotgo`
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./examples/test1
+        working-directory: utbotgo
+    steps:
+      - uses: actions/checkout@v2
+      - name: Pull or build docker image
+        run: ./.build_and_push_docker_image.sh ${{ secrets.GITHUB_TOKEN }}
+  test1:
+    name: Run test 1
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/test1
     steps:
       - uses: actions/checkout@v2
       - name: Edit `.env` file
@@ -16,8 +27,6 @@ jobs:
           echo 'UTBOTGO_VERSION=1.0' > ../../utbotgo/.env
           echo 'UTBOTGO_DOCKER_IMAGE=ghcr.io/sergeykuz1001/utbotgo:${UTBOTGO_VERSION}' >> ../../utbotgo/.env
           echo 'UTBOTGO_BIN_DIR=../examples' >> ../../utbotgo/.env
-      - name: Pull or build docker image
-        run: cd ../../utbotgo/; ./.build_and_push_docker_image.sh ${{ secrets.GITHUB_TOKEN }}
       - name: Install
         run: sudo make -C ../../utbotgo install
       - name: Initialize
@@ -26,5 +35,34 @@ jobs:
         run: |
           echo 'tested-functions:' > utbotgo/config.yml
           echo '  - getSign' >> utbotgo/config.yml
-      - name: Run test generation
-        run: ../utbotgo test
+      - name: Generate tests
+        run: ../utbotgo generate
+      - name: Check tests
+        run: ./.test_checker.py
+  test2:
+    name: Run test 2
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/test2
+    steps:
+      - uses: actions/checkout@v2
+      - name: Edit `.env` file
+        run: |
+          echo 'UTBOTGO_VERSION=1.0' > ../../utbotgo/.env
+          echo 'UTBOTGO_DOCKER_IMAGE=ghcr.io/sergeykuz1001/utbotgo:${UTBOTGO_VERSION}' >> ../../utbotgo/.env
+          echo 'UTBOTGO_BIN_DIR=../examples' >> ../../utbotgo/.env
+      - name: Install
+        run: sudo make -C ../../utbotgo install
+      - name: Initialize
+        run: ../utbotgo init
+      - name: Edit configuration
+        run: |
+          echo 'tested-functions:' > utbotgo/config.yml
+          echo '  - addInt' >> utbotgo/config.yml
+          echo '  - multInt' >> utbotgo/config.yml
+      - name: Generate tests
+        run: ../utbotgo generate
+      - name: Check tests
+        run: ./.test_checker.py

@@ -1,3 +1,3 @@
-# This section describe functions which you want to test.
+# This section describes functions which you want to test.
 tested-functions:
   - example_1 # function with name `example_1` will be tested
