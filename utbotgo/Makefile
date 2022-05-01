@@ -11,11 +11,11 @@ build: .docker_image
         --rm \
         -v $${PWD}:/utbotgo \
         -w /utbotgo/utils \
-        utbotgo:${UTBOTGO_VERSION} \
+        $(UTBOTGO_DOCKER_IMAGE) \
         make
 
 .docker_image: Dockerfile .env
-	docker build -t utbotgo:$(UTBOTGO_VERSION) .
+	docker pull $(UTBOTGO_DOCKER_IMAGE)
 	touch .docker_image
 
 install: $(UTBOTGO_BIN_DIR)/utbotgo
@@ -29,5 +29,5 @@ uninstall:
 
 clean: uninstall
 	cd utils; $(MAKE) clean
-	docker rmi utbotgo:$(UTBOTGO_VERSION)
+	docker rmi $(UTBOTGO_DOCKER_IMAGE)
 	rm -f .docker_image
