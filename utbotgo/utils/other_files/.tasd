@@ -1,6 +1,6 @@
 for *.go_template:
-    codeBlock: <=template><=result>(?s)<getterVar>
-    getterVar: (\{\{<varName>\}\})|(\{\{<template>\}\|\{<separator>\}\})
+    codeBlock: <=template><=statement><=result><*getterVar>(?s)(\{\{(\w|\.)+\}\})|(\{\{.+?\}\|\{.*?\}\})
+    getterVar: (?s)(\{\{<varName>\}\})|(\{\{<template>\}\|\{<separator>\}\})
     template:  <*getterVar>.+?
     separator: .*?
     varName:   <*field>(\w|\.)+

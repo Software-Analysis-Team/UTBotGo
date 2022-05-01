@@ -14,9 +14,9 @@ Commands:
     init
         Initialize current directory for generating unit-tests. Current
         directory must be directory with Go package.
-    generate
+    generate [artifact]
         Generate unit-tests for functions which specified in file
-        `utbotgo/config.yml`.
+        `utbotgo/config.yml`. If artifact is specified, generate it.
     test
         Run generated unit-tests. It does the same as `utbotgo generate`
         followed by `go test -v`.
@@ -28,8 +28,17 @@ Commands:
 vline() {
   yes - | head -80 | tr -d '\n'
 }
-if (( $# != 1 )); then
-    echo 'ERROR: must be only one command-line argument'
+docker_run='
+docker run \
+    --rm \
+    -v $PWD:/workspace \
+    -v $utbotgo_dir:/utbotgo \
+    -w /workspace \
+    $UTBOTGO_DOCKER_IMAGE \
+    /utbotgo/utils/bin/config_parser $t
+'
+if [[ $# != 1 && ($# != 2 || "x$1" != 'xgenerate') ]]; then
+    echo 'ERROR: must be only one command-line argument (except case of `generate` command)'
     vline
     echo -n "$help_message"
 else
@@ -40,14 +49,17 @@ else
         echo 'Initialization continued successfully.'
         echo 'Configuration defined in file `utbotgo/config.yml`.'
         ;;
-      generate | test | update_answers | clean)
-        docker run \
-            --rm \
-            -v "$PWD":/workspace \
-            -v "$utbotgo_dir":/utbotgo \
-            -w /workspace \
-            "$UTBOTGO_DOCKER_IMAGE" \
-            /utbotgo/utils/bin/config_parser "$1"
+      test | update_answers | clean)
+        t="$1"
+        eval "$docker_run"
+        ;;
+      generate)
+        if (( $# == 2 )); then
+          t="$2"
+        else
+          t="$1"
+        fi
+        eval "$docker_run"
         ;;
       *)
         echo 'ERROR: unknown command'

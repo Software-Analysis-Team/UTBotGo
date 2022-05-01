@@ -123,6 +123,18 @@ type GoParam struct {
 	Type GoType
 }
 
+func TypeAsString(t ast.Expr) string {
+	if tIdent, ok := t.(*ast.Ident); ok {
+		return tIdent.String()
+	} else if tArray, ok := t.(*ast.ArrayType); ok {
+		return fmt.Sprintf("[]%s", TypeAsString(tArray.Elt))
+	} else if tMap, ok := t.(*ast.MapType); ok {
+		return fmt.Sprintf("map[%s]%s", TypeAsString(tMap.Key), TypeAsString(tMap.Value))
+	} else {
+		return ""
+	}
+}
+
 func (function GoFunction) Params() (res []GoParam, err error) {
 	params := function.AST.Type.Params.List
 	for _, param := range params {
@@ -146,11 +158,11 @@ func (function GoFunction) Params() (res []GoParam, err error) {
 func (function GoFunction) ResultTypeAsString() string {
 	results := function.AST.Type.Results.List
 	if len(results) == 1 {
-		return results[0].Type.(fmt.Stringer).String()
+		return TypeAsString(results[0].Type)
 	} else {
 		resultTypes := make([]string, len(results))
 		for i := range results {
-			resultTypes[i] = results[i].Type.(fmt.Stringer).String()
+			resultTypes[i] = TypeAsString(results[i].Type)
 		}
 		return fmt.Sprintf("(%s)", strings.Join(resultTypes, ", "))
 	}
