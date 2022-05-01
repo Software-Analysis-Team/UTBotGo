@@ -46,7 +46,7 @@ else
             -v "$PWD":/workspace \
             -v "$utbotgo_dir":/utbotgo \
             -w /workspace \
-            utbotgo:"$UTBOTGO_VERSION" \
+            "$UTBOTGO_DOCKER_IMAGE" \
             /utbotgo/utils/bin/config_parser "$1"
         ;;
       *)
