@@ -1,6 +1,24 @@
 #!/usr/bin/env python3
 import json
 
+with open('utbotgo/functions/f/args.json', 'r') as f:
+    args = json.load(f)
+    nlt5, ngt5 = False, False
+    for params in args:
+        assert list(params.keys()) == ['n']
+        n = params['n']
+        if n > 5:
+            ngt5 = True
+        else:
+            nlt5 = True
+    assert nlt5 and ngt5
+
+with open('utbotgo/functions/f/answers.json', 'w') as f:
+    answers = [0] * len(args)
+    for i in range(len(args)):
+        answers[i] = {'res': ('n > 5, sorry' if args[i]['n'] > 5 else '*' * args[i]['n'])}
+    f.write(json.dumps(answers))
+
 with open('utbotgo/functions/g/args.json', 'r') as f:
     args = json.load(f)
     assert len(args) == 4
