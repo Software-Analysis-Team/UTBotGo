@@ -12,7 +12,10 @@ type utbotgo_args_{{func.name}} struct {
 }}
 }
 
-type utbotgo_result_{{func.name}} {{func.result.type}} // FIXME can't use when function return many values
+type utbotgo_results_{{func.name}} struct {
+{{	R{{func.results.name}} {{func.results.type}} `json:"{{func.results.name}}"`}|{
+}}
+}
 
 func utbotgo_parseArgs_{{func.name}}() (res []utbotgo_args_{{func.name}}, err error) {
 	var data []byte
@@ -24,7 +27,7 @@ func utbotgo_parseArgs_{{func.name}}() (res []utbotgo_args_{{func.name}}, err er
 	return
 }
 
-func utbotgo_parseAnswers_{{func.name}}() (res []utbotgo_result_{{func.name}}, err error) {
+func utbotgo_parseAnswers_{{func.name}}() (res []utbotgo_results_{{func.name}}, err error) {
 	var data []byte
 	data, err = os.ReadFile("{{files.answers.name}}")
 	if err != nil {
@@ -34,7 +37,7 @@ func utbotgo_parseAnswers_{{func.name}}() (res []utbotgo_result_{{func.name}}, e
 	return
 }
 
-func utbotgo_parseTests_{{func.name}}() (args []utbotgo_args_{{func.name}}, answers []utbotgo_result_{{func.name}}, err error) {
+func utbotgo_parseTests_{{func.name}}() (args []utbotgo_args_{{func.name}}, answers []utbotgo_results_{{func.name}}, err error) {
 	args, err = utbotgo_parseArgs_{{func.name}}()
 	if err != nil {
 		return
@@ -46,7 +49,7 @@ func utbotgo_parseTests_{{func.name}}() (args []utbotgo_args_{{func.name}}, answ
 	return
 }
 
-func utbotgo_writeResults_{{func.name}}(results []utbotgo_result_{{func.name}}) (err error) {
+func utbotgo_writeResults_{{func.name}}(results []utbotgo_results_{{func.name}}) (err error) {
 	var data []byte
 	data, err = json.Marshal(results)
 	if err != nil {
@@ -62,15 +65,15 @@ func Test_utbotgo_{{func.name}}(t *testing.T) {
 		t.Log(err)
 		t.FailNow()
 	}
-	results := make([]utbotgo_result_{{func.name}}, len(args))
+	results := make([]utbotgo_results_{{func.name}}, len(args))
 	for i := range args {
 		t.Run("test_#" + strconv.Itoa(i+1), func(t_ *testing.T) {
-			results[i] = utbotgo_result_{{func.name}}({{func.name}}({{args[i].A{{func.args.name}}}|{, }}))
+			{{results[i].R{{func.results.name}}}|{, }} = {{func.name}}({{args[i].A{{func.args.name}}}|{, }})
 			if i >= len(answers) {
-				t_.Logf("\narguments: %v\nexpected is unknown\nactual: %#v\n", args[i], results[i])
+				t_.Logf("\narguments: %v\nexpected is unknown\nactual: %v\n", args[i], results[i])
 				t_.Fail()
-			} else if answers[i] != results[i] {
-				t_.Logf("\narguments: %v\nexpected: %#v\nactual: %#v\n", args[i], answers[i], results[i])
+			} else if {{answers[i].R{{func.results.name}} != results[i].R{{func.results.name}}}|{ || }} {
+				t_.Logf("\narguments: %v\nexpected: %v\nactual: %v\n", args[i], answers[i], results[i])
 				t_.Fail()
 			}
 		})
