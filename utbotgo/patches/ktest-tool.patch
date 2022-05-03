@@ -14,8 +14,9 @@
 >             def p(key, arg, ty=None, print_if_ty_is_None=True):
 >                 if arg is not None and ((ty is None and print_if_ty_is_None) or ty == key):
 >                     print(fmt[key].format(i, arg), file=sio)
-101c108
+101,102c108
 <             txt = ''.join(c if c in self.valid_chars else '.' for c in blob.decode('ascii', errors='replace').replace('�', '.'))
+<             size = len(data)
 ---
 >             ty = self.object_types.get(name)
 107,113c113,117
