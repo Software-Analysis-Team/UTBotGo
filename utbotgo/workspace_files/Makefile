@@ -47,9 +47,9 @@ $(foreach FN,$(FNS),$(DFFF)/klee_types.json) $(foreach FN,$(FNS),$(DFFF)/ta_type
 	$(UUD)/params_parser --go-files $$(cat $<) --klee $(foreach FN,%,$(DFFF))/klee_types.json --ta $(foreach FN,%,$(DFFF))/ta_types.json $(FNS)
 
 define rules_for_function_name
-$(DFFF)/llvm_bitcode.ll: $$(DP)/llvm_bitcode.ll $$(DP)/name.txt | update_package_llvm_bitcode
+$(DFFF)/llvm_bitcode.ll: $$(DP)/name.txt | update_package_llvm_bitcode
 	$$(call mkdir,$$(@D))
-	$$(UUD)/ll_modifier $$< $$@ $$$$(cat $$(DP)/name.txt) $(FN)
+	$$(UUD)/ll_modifier $$(DP)/llvm_bitcode.ll $$@ $$$$(cat $$(DP)/name.txt) $(FN)
 
 $(DFFF)/klee-last: $(DFFF)/llvm_bitcode.ll
 	klee --disable-verify --external-calls=all --entry-point=klee.main $$<
