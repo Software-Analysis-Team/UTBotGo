@@ -4,11 +4,19 @@ import json
 with open('utbotgo/functions/addInt/args.json', 'r') as f:
     args = json.load(f)
     assert len(args) == 1
-    assert list(args[0].keys()) == ['x', 'y']
-    assert type(args[0]['x']) == int and type(args[0]['y']) == int
+    arg = args[0]
+    assert list(arg.keys()) == ['x', 'y']
+    assert type(arg['x']) == int and type(arg['y']) == int
+
+with open('utbotgo/functions/addInt/answers.json', 'w') as f:
+    f.write(json.dumps([{'R': arg['x'] + arg['y']}]))
 
 with open('utbotgo/functions/multInt/args.json', 'r') as f:
     args = json.load(f)
     assert len(args) == 1
-    assert list(args[0].keys()) == ['x', 'y']
-    assert type(args[0]['x']) == int and type(args[0]['y']) == int
+    arg = args[0]
+    assert list(arg.keys()) == ['x', 'y']
+    assert type(arg['x']) == int and type(arg['y']) == int
+
+with open('utbotgo/functions/multInt/answers.json', 'w') as f:
+    f.write(json.dumps([{'R': arg['x'] * arg['y']}]))

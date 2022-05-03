@@ -14,13 +14,14 @@ type ArgTaInfo struct {
 }
 
 type ResultTaInfo struct {
+	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
 type FunctionTaInfo struct {
 	Name string `json:"name"`
 	Args []ArgTaInfo `json:"args"`
-	Result ResultTaInfo `json:"result"`
+	Results []ResultTaInfo `json:"results"`
 }
 
 func GetFunctionTaInfo(function GoFunction) (FunctionTaInfo, bool) {
@@ -36,11 +37,21 @@ func GetFunctionTaInfo(function GoFunction) (FunctionTaInfo, bool) {
 			Type: params[i].Type.StringAsGoType(),
 		}
 	}
-	result := ResultTaInfo{Type: function.ResultTypeAsString()}
+	results_, err := function.Results()
+	if err != nil {
+		return FunctionTaInfo{}, false
+	}
+	results := make([]ResultTaInfo, len(results_))
+	for i := range results_ {
+		results[i] = ResultTaInfo{
+			Name: results_[i].Name,
+			Type: results_[i].Type.StringAsGoType(),
+		}
+	}
 	return FunctionTaInfo{
 		Name: name,
 		Args: args,
-		Result: result,
+		Results: results,
 	}, true
 }
 
