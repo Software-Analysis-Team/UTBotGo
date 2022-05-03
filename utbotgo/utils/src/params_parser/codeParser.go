@@ -57,6 +57,10 @@ const (
 	GoTypeUInt16
 	GoTypeUInt32
 	GoTypeUInt64
+	GoTypeByte
+	GoTypeRune
+	GoTypeString
+	GoTypeBool
 )
 
 func (t GoBasicType) StringAsGoType() string {
@@ -71,6 +75,10 @@ func (t GoBasicType) StringAsGoType() string {
 	case GoTypeUInt16: return "uint16"
 	case GoTypeUInt32: return "uint32"
 	case GoTypeUInt64: return "uint64"
+	case GoTypeByte:   return "byte"
+	case GoTypeRune:   return "rune"
+	case GoTypeString: return "string"
+	case GoTypeBool:   return "bool"
 	default: return ""
 	}
 }
@@ -81,12 +89,15 @@ func (t GoBasicType) StringAsKleeType() string {
 	case GoTypeInt8:   fallthrough
 	case GoTypeInt16:  fallthrough
 	case GoTypeInt32:  fallthrough
-	case GoTypeInt64:  return "int"
+	case GoTypeInt64:  fallthrough
+	case GoTypeRune:   return "int"
 	case GoTypeUInt:   fallthrough
 	case GoTypeUInt8:  fallthrough
 	case GoTypeUInt16: fallthrough
 	case GoTypeUInt32: fallthrough
-	case GoTypeUInt64: return "uint"
+	case GoTypeUInt64: fallthrough
+	case GoTypeByte:   return "uint"
+	case GoTypeString: return "text"
 	default: return ""
 	}
 }
@@ -116,9 +127,13 @@ var GoTypes = map[string]GoType{
 	"uint16": GoTypeUInt16,
 	"uint32": GoTypeUInt32,
 	"uint64": GoTypeUInt64,
+	"byte":   GoTypeByte,
+	"rune":   GoTypeRune,
+	"string": GoTypeString,
+	"bool":   GoTypeBool,
 }
 
-type GoParam struct {
+type GoVar struct {
 	Name string
 	Type GoType
 }
@@ -135,35 +150,33 @@ func TypeAsString(t ast.Expr) string {
 	}
 }
 
-func (function GoFunction) Params() (res []GoParam, err error) {
-	params := function.AST.Type.Params.List
-	for _, param := range params {
-		paramTypeIdent, ok := param.Type.(*ast.Ident)
+func (function GoFunction) Params() (res []GoVar, err error) {
+	return Vars(function.AST.Type.Params.List)
+}
+
+func (function GoFunction) Results() (res []GoVar, err error) {
+	return Vars(function.AST.Type.Results.List)
+}
+
+func Vars(vars []*ast.Field) (res []GoVar, err error) {
+	for _, var_ := range vars {
+		varTypeIdent, ok := var_.Type.(*ast.Ident)
 		if ! ok {
 			err = fmt.Errorf("unknown type")
 			return
 		}
-		paramType, ok := GoTypes[paramTypeIdent.Name]
+		varType, ok := GoTypes[varTypeIdent.Name]
 		if ! ok {
 			err = fmt.Errorf("unknown type")
 			return
 		}
-		for _, paramName := range param.Names {
-			res = append(res, GoParam{paramName.Name, paramType})
+		varNames := var_.Names
+		if len(varNames) == 0 {
+			varNames = []*ast.Ident{{Name: ""}}
+		}
+		for _, varName := range varNames {
+			res = append(res, GoVar{varName.Name, varType})
 		}
 	}
 	return
-}
-
-func (function GoFunction) ResultTypeAsString() string {
-	results := function.AST.Type.Results.List
-	if len(results) == 1 {
-		return TypeAsString(results[0].Type)
-	} else {
-		resultTypes := make([]string, len(results))
-		for i := range results {
-			resultTypes[i] = TypeAsString(results[i].Type)
-		}
-		return fmt.Sprintf("(%s)", strings.Join(resultTypes, ", "))
-	}
 }

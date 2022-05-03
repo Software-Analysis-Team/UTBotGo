@@ -12,4 +12,7 @@ except BaseException as err:
     print(err)
     sys.exit(1)
 
-subprocess.run(["make", "-f", "/utbotgo/workspace_files/Makefile", f"FNS={' '.join(functions)}", sys.argv[1]])
+try:
+    subprocess.run(["make", "-f", "/utbotgo/workspace_files/Makefile", f"FNS={' '.join(functions)}", sys.argv[1]], check=True)
+except subprocess.CalledProcessError as exc:
+    sys.exit(exc.returncode)

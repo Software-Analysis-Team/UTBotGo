@@ -4,7 +4,7 @@ on:
     branches: [build_and_run]
 jobs:
   build:
-    name: Pull or build Docker image and install `utbotgo`
+    name: Pull or build Docker image
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -38,7 +38,9 @@ jobs:
       - name: Generate tests
         run: ../utbotgo generate
       - name: Check tests
-        run: ./.test_checker.py
+        run: sudo ./.test_checker.py
+      - name: Run tests
+        run: sudo go test -v
   test2:
     name: Run test 2
     needs: build
@@ -65,4 +67,33 @@ jobs:
       - name: Generate tests
         run: ../utbotgo generate
       - name: Check tests
-        run: ./.test_checker.py
+        run: sudo ./.test_checker.py
+      - name: Run tests
+        run: sudo go test -v
+  test3:
+    name: Run test 3
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/test3
+    steps:
+      - uses: actions/checkout@v2
+      - name: Edit `.env` file
+        run: |
+          echo 'UTBOTGO_VERSION=1.0' > ../../utbotgo/.env
+          echo 'UTBOTGO_DOCKER_IMAGE=ghcr.io/sergeykuz1001/utbotgo:${UTBOTGO_VERSION}' >> ../../utbotgo/.env
+          echo 'UTBOTGO_BIN_DIR=../examples' >> ../../utbotgo/.env
+      - name: Install
+        run: sudo make -C ../../utbotgo install
+      - name: Initialize
+        run: ../utbotgo init
+      - name: Edit configuration
+        run: |
+          echo 'tested-functions: [g]' > utbotgo/config.yml
+      - name: Generate tests
+        run: ../utbotgo generate
+      - name: Check tests
+        run: sudo ./.test_checker.py
+      - name: Run tests
+        run: sudo go test -v
