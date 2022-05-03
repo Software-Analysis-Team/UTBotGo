@@ -1,5 +1,6 @@
 name: Build and run `utbotgo` tool
 on:
+  pull_request:
   push:
     branches: [build_and_run]
 jobs:
@@ -36,11 +37,9 @@ jobs:
           echo 'tested-functions:' > utbotgo/config.yml
           echo '  - getSign' >> utbotgo/config.yml
       - name: Generate tests
-        run: ../utbotgo generate
+        run: ../utbotgo test || true
       - name: Check tests
-        run: sudo ./.test_checker.py
-      - name: Run tests
-        run: sudo go test -v
+        run: sudo ./.test_checker.py && sudo go test
   test2:
     name: Run test 2
     needs: build
@@ -65,11 +64,9 @@ jobs:
           echo '  - addInt' >> utbotgo/config.yml
           echo '  - multInt' >> utbotgo/config.yml
       - name: Generate tests
-        run: ../utbotgo generate
+        run: ../utbotgo test || true
       - name: Check tests
-        run: sudo ./.test_checker.py
-      - name: Run tests
-        run: sudo go test -v
+        run: sudo ./.test_checker.py && sudo go test
   test3:
     name: Run test 3
     needs: build
@@ -90,10 +87,8 @@ jobs:
         run: ../utbotgo init
       - name: Edit configuration
         run: |
-          echo 'tested-functions: [g]' > utbotgo/config.yml
+          echo 'tested-functions: [f, g]' > utbotgo/config.yml
       - name: Generate tests
-        run: ../utbotgo generate
+        run: ../utbotgo test || true
       - name: Check tests
-        run: sudo ./.test_checker.py
-      - name: Run tests
-        run: sudo go test -v
+        run: sudo ./.test_checker.py && sudo go test
