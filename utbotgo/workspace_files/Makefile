@@ -65,7 +65,7 @@ $(DFFF)/args.json: $(DFFF)/klee_types.json $(DFFF)/klee-last
 $(FNTF): $(DFFF)/ta_config.json $$(UOFD)/test.go_template
 	cd $$(UOFD); $$(UUD)/template_applier -i $$(PWD)/$$< -c test.go_template $$(PWD)/$$@
 
-$(DFFF)/results.json: $(FNTF) $(DFFF)/args.json
+$(DFFF)/results.json: | $(FNTF) $(DFFF)/args.json
 	go test || true
 
 update_answers_for_$(FN): $(DFFF)/results.json
