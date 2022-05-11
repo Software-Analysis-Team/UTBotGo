@@ -11,24 +11,11 @@ FNTF = utbotgo_$(FN)_test.go
 mkdir = mkdir -p $(1)
 
 # Rules
-.PHONY: update_package_config update_package_llvm_bitcode generate test update_answers $(foreach FN,$(FNS),update_answers_for_$(FN)) remove clean
+.PHONY: update_package_llvm_bitcode generate test update_answers $(foreach FN,$(FNS),update_answers_for_$(FN)) remove clean
 
-$(DP)/config.json update_package_config:
-	$(call mkdir,$(DP))
-	$(UUD)/package_configurator $(DP)/config.json
-
-$(DP)/real_name.txt: $(DP)/config.json
-	$(UUD)/package_config_parser Name < $< > $@
-
-$(DP)/name.txt: $(DP)/config.json $(DP)/real_name.txt
-	name=$$(cat $(DP)/real_name.txt); \
-    if [[ $$name != 'main' ]]; then \
-        name=$$($(UUD)/package_config_parser ImportPath < $<); \
-    fi; \
-    echo "$$name" > $@
-
-$(DP)/go_files.txt: $(DP)/config.json
-	$(UUD)/package_config_parser GoFiles < $< > $@
+$(DP)/name.txt $(DP)/import_path.txt $(DP)/go_files.txt $(DP)/pseudo_name.txt &:
+	go list -json | $(UUD)/package_config_parser Name $(DP)/name.txt ImportPath $(DP)/import_path.txt GoFiles $(DP)/go_files.txt
+	$(UUD)/pseudo_name_getter $(DP)/name.txt $(DP)/import_path.txt $(DP)/pseudo_name.txt
 
 $(DP)/file_templates.json:
 	echo "{" > $@
@@ -38,21 +25,20 @@ $(DP)/file_templates.json:
 	echo "}" >> $@
 
 $(DP)/llvm_bitcode.ll update_package_llvm_bitcode: $(DP)/go_files.txt
-	$(call mkdir,$(DP))
 	$(UUD)/go2ll $(DP) $(DP)/llvm_bitcode.ll $<
 
-$(foreach FN,$(FNS),$(DFFF)/klee_types.json) $(foreach FN,$(FNS),$(DFFF)/ta_types.json) &:: $(DP)/go_files.txt
+$(foreach FN,$(FNS),$(DFFF)/klee_types.json) $(foreach FN,$(FNS),$(DFFF)/ta_types.json) &: $(DP)/go_files.txt
 	$(UUD)/params_parser --go-files $$(cat $<) --klee $(foreach FN,%,$(DFFF))/klee_types.json --ta $(foreach FN,%,$(DFFF))/ta_types.json $(FNS)
 
 define rules_for_function_name
-$(DFFF)/llvm_bitcode.ll: $$(DP)/llvm_bitcode.ll $$(DP)/name.txt
+$(DFFF)/llvm_bitcode.ll: $$(DP)/llvm_bitcode.ll $$(DP)/pseudo_name.txt
 	$$(call mkdir,$$(@D))
 	$$(UUD)/ll_modifier $$< $$@ $$$$(cat $$(DP)/name.txt) $(FN)
 
 $(DFFF)/klee-last: $(DFFF)/llvm_bitcode.ll
 	klee --disable-verify --external-calls=all --entry-point=klee.main $$<
 
-$(DFFF)/ta_config.json: $$(DP)/real_name.txt $$(DP)/file_templates.json $(DFFF)/ta_types.json
+$(DFFF)/ta_config.json: $$(DP)/name.txt $$(DP)/file_templates.json $(DFFF)/ta_types.json
 	$$(UUD)/ta_config_creator $$^ > $$@
 
 $(DFFF)/args.json: $(DFFF)/klee_types.json $(DFFF)/klee-last
@@ -75,7 +61,7 @@ $(DP)/function_names.txt: $(UW)/config.yml
 	rm -rf $(foreach FN,$(filter-out $(FNS),$(shell cat $@ 2> /dev/null)),$(DFFF)) $(foreach FN,$(filter-out $(FNS),$(shell cat $@ 2> /dev/null)),$(FNTF))
 	echo $(FNS) > $@
 
-generate: update_package_config update_package_llvm_bitcode $(foreach FN,$(FNS),$(FNTF)) $(foreach FN,$(FNS),$(DFFF)/args.json) $(DP)/function_names.txt
+generate: update_package_llvm_bitcode $(foreach FN,$(FNS),$(FNTF)) $(foreach FN,$(FNS),$(DFFF)/args.json) $(DP)/function_names.txt
 
 test: generate
 	go test -v

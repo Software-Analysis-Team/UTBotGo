@@ -96,3 +96,10 @@ env LD_LIBRARY_PATH=/go/lib64
 env PATH="/go/bin:$PATH"
 # Installing python libraries
 run pip3 install pyyaml
+# Updating make
+run wget https://ftp.gnu.org/gnu/make/make-4.3.tar.gz; \
+    tar xf make-4.3.tar.gz; \
+    cd make-4.3; \
+    ./configure; \
+    make; \
+    make install
