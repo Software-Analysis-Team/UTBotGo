@@ -13,9 +13,7 @@ mkdir = mkdir -p $(1)
 # Rules
 .PHONY: update_package_config update_package_llvm_bitcode generate test update_answers $(foreach FN,$(FNS),update_answers_for_$(FN)) remove clean
 
-$(DP)/config.json: update_package_config
-
-update_package_config:
+$(DP)/config.json update_package_config:
 	$(call mkdir,$(DP))
 	$(UUD)/package_configurator $(DP)/config.json
 
@@ -39,9 +37,7 @@ $(DP)/file_templates.json:
 	echo "    \"results\": \"$(foreach FN,%,$(DFFF))/results.json\"" >> $@
 	echo "}" >> $@
 
-$(DP)/llvm_bitcode.ll: update_package_llvm_bitcode
-
-update_package_llvm_bitcode: $(DP)/go_files.txt
+$(DP)/llvm_bitcode.ll update_package_llvm_bitcode: $(DP)/go_files.txt
 	$(call mkdir,$(DP))
 	$(UUD)/go2ll $(DP) $(DP)/llvm_bitcode.ll $<
 
@@ -49,7 +45,7 @@ $(foreach FN,$(FNS),$(DFFF)/klee_types.json) $(foreach FN,$(FNS),$(DFFF)/ta_type
 	$(UUD)/params_parser --go-files $$(cat $<) --klee $(foreach FN,%,$(DFFF))/klee_types.json --ta $(foreach FN,%,$(DFFF))/ta_types.json $(FNS)
 
 define rules_for_function_name
-$(DFFF)/llvm_bitcode.ll: $$(DP)/llvm_bitcode.ll $$(DP)/name.txt | update_package_llvm_bitcode
+$(DFFF)/llvm_bitcode.ll: $$(DP)/llvm_bitcode.ll $$(DP)/name.txt
 	$$(call mkdir,$$(@D))
 	$$(UUD)/ll_modifier $$< $$@ $$$$(cat $$(DP)/name.txt) $(FN)
 
@@ -79,7 +75,7 @@ $(DP)/function_names.txt: $(UW)/config.yml
 	rm -rf $(foreach FN,$(filter-out $(FNS),$(shell cat $@ 2> /dev/null)),$(DFFF)) $(foreach FN,$(filter-out $(FNS),$(shell cat $@ 2> /dev/null)),$(FNTF))
 	echo $(FNS) > $@
 
-generate: $(foreach FN,$(FNS),$(FNTF)) $(foreach FN,$(FNS),$(DFFF)/args.json) $(DP)/function_names.txt
+generate: update_package_config update_package_llvm_bitcode $(foreach FN,$(FNS),$(FNTF)) $(foreach FN,$(FNS),$(DFFF)/args.json) $(DP)/function_names.txt
 
 test: generate
 	go test -v
