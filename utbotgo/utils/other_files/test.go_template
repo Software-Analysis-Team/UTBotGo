@@ -7,49 +7,27 @@ import (
 	"testing"
 )
 
-type utbotgo_args_{{func.name}} struct {
+type utbotgo_type_args_{{func.name}} struct {
 {{	A{{func.args.name}} {{func.args.type}} `json:"{{func.args.name}}"`}|{
 }}
 }
 
-type utbotgo_results_{{func.name}} struct {
-{{	R{{func.results.name}} {{func.results.type}} `json:"{{func.results.name}}"`}|{
+var utbotgo_args_{{func.name}} = []utbotgo_type_args_{{func.name}}{
+	[[{ {{A{{func.args.name}}: [[args.{{func.args.name}}]]}|{, }} },]|[
+	]]
+}
+
+type utbotgo_type_results_{{func.name}} struct {
+{{	R{{func.results.name}} {{func.results.type}} `json:"R{{func.results.name}}"`}|{
 }}
 }
 
-func utbotgo_parseArgs_{{func.name}}() (res []utbotgo_args_{{func.name}}, err error) {
-	var data []byte
-	data, err = os.ReadFile("{{files.args.name}}")
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(data, &res)
-	return
+var utbotgo_answers_{{func.name}} = []utbotgo_type_results_{{func.name}}{
+	[[{ {{R{{func.results.name}}: [[answers.R{{func.results.name}}]]}|{, }} },]|[
+	]]
 }
 
-func utbotgo_parseAnswers_{{func.name}}() (res []utbotgo_results_{{func.name}}, err error) {
-	var data []byte
-	data, err = os.ReadFile("{{files.answers.name}}")
-	if err != nil {
-		return nil, nil
-	}
-	err = json.Unmarshal(data, &res)
-	return
-}
-
-func utbotgo_parseTests_{{func.name}}() (args []utbotgo_args_{{func.name}}, answers []utbotgo_results_{{func.name}}, err error) {
-	args, err = utbotgo_parseArgs_{{func.name}}()
-	if err != nil {
-		return
-	}
-	answers, err = utbotgo_parseAnswers_{{func.name}}()
-	if err != nil {
-		return
-	}
-	return
-}
-
-func utbotgo_writeResults_{{func.name}}(results []utbotgo_results_{{func.name}}) (err error) {
+func utbotgo_writeResults_{{func.name}}(results []utbotgo_type_results_{{func.name}}) (err error) {
 	var data []byte
 	data, err = json.Marshal(results)
 	if err != nil {
@@ -60,12 +38,9 @@ func utbotgo_writeResults_{{func.name}}(results []utbotgo_results_{{func.name}})
 }
 
 func Test_utbotgo_{{func.name}}(t *testing.T) {
-	args, answers, err := utbotgo_parseTests_{{func.name}}()
-	if err != nil {
-		t.Log(err)
-		t.FailNow()
-	}
-	results := make([]utbotgo_results_{{func.name}}, len(args))
+	args := utbotgo_args_{{func.name}}
+	answers := utbotgo_answers_{{func.name}}
+	results := make([]utbotgo_type_results_{{func.name}}, len(args))
 	for i := range args {
 		t.Run("test_#" + strconv.Itoa(i+1), func(t_ *testing.T) {
 			{{results[i].R{{func.results.name}}}|{, }} = {{func.name}}({{args[i].A{{func.args.name}}}|{, }})
@@ -78,7 +53,7 @@ func Test_utbotgo_{{func.name}}(t *testing.T) {
 			}
 		})
 	}
-	err = utbotgo_writeResults_{{func.name}}(results)
+	err := utbotgo_writeResults_{{func.name}}(results)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()
