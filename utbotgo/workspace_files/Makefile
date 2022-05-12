@@ -33,7 +33,7 @@ $(foreach FN,$(FNS),$(DFFF)/klee_types.json) $(foreach FN,$(FNS),$(DFFF)/ta_type
 define rules_for_function_name
 $(DFFF)/llvm_bitcode.ll: $$(DP)/llvm_bitcode.ll $$(DP)/pseudo_name.txt
 	$$(call mkdir,$$(@D))
-	$$(UUD)/ll_modifier $$< $$@ $$$$(cat $$(DP)/name.txt) $(FN)
+	$$(UUD)/ll_modifier $$< $$@ $$$$(cat $$(DP)/pseudo_name.txt) $(FN)
 
 $(DFFF)/klee-last: $(DFFF)/llvm_bitcode.ll
 	klee --disable-verify --external-calls=all --entry-point=klee.main $$<
