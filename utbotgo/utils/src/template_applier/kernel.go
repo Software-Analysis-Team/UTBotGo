@@ -69,6 +69,9 @@ func (array Array) String() string {
 }
 
 func (array Array) getNextString(varName VarName, varIdx int, fieldInfo *FieldInfo) (String, GetStatus) {
+	if len(array) == 0 {
+		return nil, WithError
+	}
 	if fieldInfo.varIdx != varIdx {
 		return array[fieldInfo.elemIdx].getNextString(varName, varIdx, fieldInfo)
 	}

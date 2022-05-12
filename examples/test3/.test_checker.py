@@ -16,7 +16,7 @@ with open('utbotgo/functions/f/args.json', 'r') as f:
 with open('utbotgo/functions/f/answers.json', 'w') as f:
     answers = [0] * len(args)
     for i in range(len(args)):
-        answers[i] = {'res': ('n > 5, sorry' if args[i]['n'] > 5 else '*' * args[i]['n'])}
+        answers[i] = {'Rres': ('n > 5, sorry' if args[i]['n'] > 5 else '*' * args[i]['n'])}
     f.write(json.dumps(answers))
 
 with open('utbotgo/functions/g/args.json', 'r') as f:
@@ -42,5 +42,5 @@ with open('utbotgo/functions/g/args.json', 'r') as f:
 with open('utbotgo/functions/g/answers.json', 'w') as f:
     answers = [0] * len(args)
     for i in range(len(args)):
-        answers[i] = {'d': max(args[i]['a'], args[i]['b'], args[i]['c'])}
+        answers[i] = {'Rd': max(args[i]['a'], args[i]['b'], args[i]['c'])}
     f.write(json.dumps(answers))
