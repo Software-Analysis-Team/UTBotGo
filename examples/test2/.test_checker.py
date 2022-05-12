@@ -8,7 +8,7 @@ with open('utbotgo/functions/addInt/args.json', 'r') as f:
     assert list(arg.keys()) == ['x', 'y']
     assert type(arg['x']) == int and type(arg['y']) == int
 
-with open('utbotgo/functions/addInt/answers.json', 'w') as f:
+with open('utbotgo/functions/addInt/results.json', 'w') as f:
     f.write(json.dumps([{'R': arg['x'] + arg['y']}]))
 
 with open('utbotgo/functions/multInt/args.json', 'r') as f:
@@ -18,5 +18,5 @@ with open('utbotgo/functions/multInt/args.json', 'r') as f:
     assert list(arg.keys()) == ['x', 'y']
     assert type(arg['x']) == int and type(arg['y']) == int
 
-with open('utbotgo/functions/multInt/answers.json', 'w') as f:
+with open('utbotgo/functions/multInt/results.json', 'w') as f:
     f.write(json.dumps([{'R': arg['x'] * arg['y']}]))

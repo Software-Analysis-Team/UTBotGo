@@ -42,7 +42,7 @@ jobs:
       - name: Generate tests
         run: ../utbotgo test || true
       - name: Check tests
-        run: sudo ./.test_checker.py && sudo go test
+        run: sudo ./.test_checker.py && ../utbotgo update_answers && sudo go test
   test2:
     name: Run test 2
     needs: build
@@ -69,7 +69,7 @@ jobs:
       - name: Generate tests
         run: ../utbotgo test || true
       - name: Check tests
-        run: sudo ./.test_checker.py && sudo go test
+        run: sudo ./.test_checker.py && ../utbotgo update_answers && sudo go test
   test3:
     name: Run test 3
     needs: build
@@ -94,4 +94,4 @@ jobs:
       - name: Generate tests
         run: ../utbotgo test || true
       - name: Check tests
-        run: sudo ./.test_checker.py && sudo go test
+        run: sudo ./.test_checker.py && ../utbotgo update_answers && sudo go test

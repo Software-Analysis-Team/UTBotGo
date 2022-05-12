@@ -13,7 +13,7 @@ with open('utbotgo/functions/f/args.json', 'r') as f:
             nlt5 = True
     assert nlt5 and ngt5
 
-with open('utbotgo/functions/f/answers.json', 'w') as f:
+with open('utbotgo/functions/f/results.json', 'w') as f:
     answers = [0] * len(args)
     for i in range(len(args)):
         answers[i] = {'Rres': ('n > 5, sorry' if args[i]['n'] > 5 else '*' * args[i]['n'])}
@@ -39,7 +39,7 @@ with open('utbotgo/functions/g/args.json', 'r') as f:
             cases[3] = True
     assert cases[0] and cases[1] and cases[2] and cases[3]
 
-with open('utbotgo/functions/g/answers.json', 'w') as f:
+with open('utbotgo/functions/g/results.json', 'w') as f:
     answers = [0] * len(args)
     for i in range(len(args)):
         answers[i] = {'Rd': max(args[i]['a'], args[i]['b'], args[i]['c'])}
