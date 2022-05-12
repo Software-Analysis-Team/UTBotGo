@@ -11,9 +11,9 @@ FNTF = utbotgo_$(FN)_test.go
 mkdir = mkdir -p $(1)
 
 # Rules
-.PHONY: update_package_llvm_bitcode generate test update_answers $(foreach FN,$(FNS),update_answers_for_$(FN)) remove clean
+.PHONY: update_package_config update_package_llvm_bitcode generate test update_answers $(foreach FN,$(FNS),update_answers_for_$(FN)) remove clean
 
-$(DP)/name.txt $(DP)/import_path.txt $(DP)/go_files.txt $(DP)/pseudo_name.txt &:
+$(DP)/name.txt $(DP)/import_path.txt $(DP)/go_files.txt $(DP)/pseudo_name.txt update_package_config &:
 	go list -json | $(UUD)/package_config_parser Name $(DP)/name.txt ImportPath $(DP)/import_path.txt GoFiles $(DP)/go_files.txt
 	$(UUD)/pseudo_name_getter $(DP)/name.txt $(DP)/import_path.txt $(DP)/pseudo_name.txt
 
@@ -61,7 +61,7 @@ $(DP)/function_names.txt: $(UW)/config.yml
 	rm -rf $(foreach FN,$(filter-out $(FNS),$(shell cat $@ 2> /dev/null)),$(DFFF)) $(foreach FN,$(filter-out $(FNS),$(shell cat $@ 2> /dev/null)),$(FNTF))
 	echo $(FNS) > $@
 
-generate: update_package_llvm_bitcode $(foreach FN,$(FNS),$(FNTF)) $(foreach FN,$(FNS),$(DFFF)/args.json) $(DP)/function_names.txt
+generate: update_package_config update_package_llvm_bitcode $(foreach FN,$(FNS),$(FNTF)) $(foreach FN,$(FNS),$(DFFF)/args.json) $(DP)/function_names.txt
 
 test: generate
 	go test -v
