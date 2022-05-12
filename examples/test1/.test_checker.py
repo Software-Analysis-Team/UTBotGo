@@ -11,7 +11,7 @@ with open('utbotgo/functions/getSign/args.json', 'r') as f:
     values.sort()
     assert values[0][0] < 0 and values[1][0] == 0 and values[2][0] > 0
 
-with open('utbotgo/functions/getSign/answers.json', 'w') as f:
+with open('utbotgo/functions/getSign/results.json', 'w') as f:
     answers = [0] * len(args)
     for value, i in values:
         if value == 0:
