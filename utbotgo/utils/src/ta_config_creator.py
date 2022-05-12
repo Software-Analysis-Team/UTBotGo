@@ -25,5 +25,5 @@ for i, raw_arg in enumerate(raw_args):
 answers = [dict() for _ in range(len(raw_answers))]
 for i, raw_answer in enumerate(raw_answers):
     for key, value in raw_answer.items():
-        answers[i][key] = str(value)
+        answers[i][key] = str(value) if type(value) != str else f'"{value}"'
 print(json.dumps({"package": {"name": package_name}, "files": files, "func": ta_types, "args": args, "answers": answers}))
